@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Apontamento de produção</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#4A3427">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: PDV de cozinha — faixa marrom no topo, teclado de quadrados (cada toque soma 1),
+   barra do extrato presa embaixo, e o extrato final com cara de cupom para conferir. */
+:root {
+  --creme: #FFF8E7;
+  --papel: #FFFDF7;
+  --cupom: #FFFEF9;
+  --marrom: #4A3427;
+  --tinta: #3A291F;
+  --areia: #B4936C;
+  --areia-escura: #8C6E4D;
+  --areia-clara: #E9DCC6;
+  --laranja: #FF3D00;
+  --laranja-texto: #C42E00;
+  --laranja-suave: #FFE3D6;
+  --sobre-laranja: #FFFFFF;
+  --ok: #2F7A3E;
+  --ok-fundo: #E3F1E4;
+  --alerta: #8A5A00;
+  --alerta-fundo: #FBEFD3;
+  --erro: #B3261E;
+  --erro-fundo: #FBE3E1;
+  --discord: #5865F2;
+  --discord-fundo: #EEF0FE;
+  --sombra: 0 1px 0 rgba(74, 52, 39, .12), 0 6px 18px -10px rgba(74, 52, 39, .35);
+  --fonte: "Nunito", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --raio: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --creme: #1C1511; --papel: #261D17; --cupom: #2C221B; --marrom: #120D0A; --tinta: #F6EBD8;
+    --areia: #C2A27C; --areia-escura: #D8BE9C; --areia-clara: #3A2D24; --laranja: #FF5A26; --laranja-texto: #FF8A5E;
+    --laranja-suave: #4A2414; --sobre-laranja: #1C1511; --ok: #7CC88A; --ok-fundo: #1F3324; --alerta: #E9B758;
+    --alerta-fundo: #3A2E14; --erro: #FF8A80; --erro-fundo: #3D1E1C; --discord: #9AA3FF; --discord-fundo: #23264A;
+    --sombra: 0 1px 0 rgba(0,0,0,.4), 0 8px 20px -12px rgba(0,0,0,.7);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --creme: #1C1511; --papel: #261D17; --cupom: #2C221B; --marrom: #120D0A; --tinta: #F6EBD8;
+  --areia: #C2A27C; --areia-escura: #D8BE9C; --areia-clara: #3A2D24; --laranja: #FF5A26; --laranja-texto: #FF8A5E;
+  --laranja-suave: #4A2414; --sobre-laranja: #1C1511; --ok: #7CC88A; --ok-fundo: #1F3324; --alerta: #E9B758;
+  --alerta-fundo: #3A2E14; --erro: #FF8A80; --erro-fundo: #3D1E1C; --discord: #9AA3FF; --discord-fundo: #23264A;
+  --sombra: 0 1px 0 rgba(0,0,0,.4), 0 8px 20px -12px rgba(0,0,0,.7);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { min-height: 100%; }
+body {
+  margin: 0; background: var(--creme); color: var(--tinta);
+  font: 500 17px/1.45 var(--fonte); -webkit-tap-highlight-color: transparent;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 10; background: var(--marrom);
+}
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; touch-action: manipulation; }
+:focus-visible { outline: 3px solid var(--laranja); outline-offset: 2px; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* faixa do topo */
+.topo { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--marrom); color: #FFF8E7; }
+.topo-dentro {
+  max-width: 620px; margin: 0 auto; display: flex; align-items: center; gap: 12px; padding-block: 12px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.marca { display: grid; min-width: 0; flex: 1; }
+.marca small { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #E7C9A3; }
+.marca strong { font-size: 19px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.quem { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; }
+.quem span { max-width: 9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #F3E4CC; }
+.btn-sair {
+  border: 1px solid rgba(255, 248, 231, .35); background: transparent; color: #FFF8E7;
+  border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 800;
+}
+.faixa-demo {
+  background: var(--alerta-fundo); color: var(--alerta); font-size: 14px; font-weight: 700; text-align: center; padding-block: 8px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* telas */
+main {
+  max-width: 620px; margin: 0 auto; padding-block: 16px 150px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.tela { display: grid; gap: 16px; }
+h1 { margin: 0; font-size: 26px; line-height: 1.15; font-weight: 900; text-wrap: balance; }
+h2 { margin: 0; font-size: 13px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; color: var(--areia-escura); }
+.voltar { justify-self: start; border: 0; background: none; padding: 4px 0; color: var(--laranja-texto); font-weight: 800; font-size: 16px; }
+.voltar::before { content: "‹ "; font-size: 20px; }
+.msg { margin: 0; padding: 12px 14px; border-radius: 12px; font-weight: 700; font-size: 15px; }
+.msg.erro { background: var(--erro-fundo); color: var(--erro); }
+.msg.alerta { background: var(--alerta-fundo); color: var(--alerta); }
+
+/* login */
+.cartao { background: var(--papel); border-radius: var(--raio); box-shadow: var(--sombra); padding: 20px; display: grid; gap: 14px; }
+label { display: grid; gap: 6px; font-weight: 800; font-size: 15px; }
+input[type="text"], input[type="password"], input[type="date"] {
+  width: 100%; min-height: 56px; border-radius: 12px; border: 2px solid var(--areia-clara);
+  background: var(--creme); padding: 0 14px; font-size: 18px; font-weight: 700;
+}
+input:focus { border-color: var(--laranja); outline: none; }
+
+/* botões principais */
+.btn {
+  min-height: 60px; border-radius: 14px; border: 0; padding: 0 20px; font-size: 19px; font-weight: 900;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+}
+.btn-pri { background: var(--laranja); color: var(--sobre-laranja); }
+.btn-pri:active { transform: translateY(1px); }
+.btn-pri[disabled] { opacity: .45; cursor: default; }
+.btn-sec { background: var(--papel); color: var(--tinta); border: 2px solid var(--areia-clara); }
+.barra {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 4; background: var(--marrom); color: #FFF8E7;
+  padding-top: 10px; padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  box-shadow: 0 -8px 24px -12px rgba(0,0,0,.45);
+}
+.barra-dentro { max-width: 620px; margin: 0 auto; display: flex; gap: 10px; align-items: center; }
+.barra-dentro .btn-pri { flex: 1; }
+.barra-dentro .btn-sec { flex: 0 0 auto; background: transparent; color: #FFF8E7; border-color: rgba(255,248,231,.35); }
+.resumo { display: grid; line-height: 1.1; min-width: 5.5em; }
+.resumo b { font: 600 26px/1 var(--mono); }
+.resumo small { font-size: 13px; font-weight: 800; color: #E7C9A3; }
+
+/* filtros do PDV */
+.filtros { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.filtros::-webkit-scrollbar { display: none; }
+.chip {
+  flex: 0 0 auto; min-height: 44px; border-radius: 999px; border: 2px solid var(--areia-clara);
+  background: var(--papel); font-weight: 900; padding: 0 16px; font-size: 15px;
+}
+.chip[aria-pressed="true"] { border-color: var(--marrom); background: var(--marrom); color: #FFF8E7; }
+
+/* teclado de quadrados */
+.secao { display: grid; gap: 10px; }
+.teclado { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 520px) { .teclado { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.tecla-caixa { position: relative; min-width: 0; }
+.tecla {
+  width: 100%; aspect-ratio: 1 / 1; max-width: 100%; border: 3px solid transparent; border-radius: var(--raio);
+  background: var(--papel); box-shadow: var(--sombra); padding: 10px; text-align: left;
+  display: grid; grid-template-rows: 1fr auto; gap: 4px; transition: transform .08s ease;
+}
+.tecla-nome { font-size: 15px; font-weight: 900; line-height: 1.15; overflow-wrap: anywhere; align-self: start; }
+.tecla-var { font: 600 19px/1 var(--mono); color: var(--areia-escura); }
+.tecla.tem { border-color: var(--laranja); background: var(--laranja-suave); }
+.tecla.tem .tecla-var { color: var(--laranja-texto); }
+.tecla.bateu { transform: scale(.94); }
+.tecla-qtd {
+  position: absolute; top: -8px; right: -6px; min-width: 34px; height: 34px; padding: 0 8px; border-radius: 999px;
+  background: var(--laranja); color: var(--sobre-laranja); font: 600 17px/34px var(--mono); text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.25); pointer-events: none;
+}
+.tecla-menos {
+  position: absolute; right: 6px; bottom: 6px; width: 38px; height: 38px; border-radius: 12px; border: 0;
+  background: var(--marrom); color: #FFF8E7; font-size: 26px; font-weight: 900; line-height: 1;
+}
+
+/* extrato (cupom) */
+.cupom {
+  background: var(--cupom); box-shadow: var(--sombra); border-radius: 6px 6px 0 0; position: relative;
+  padding: 18px 16px 22px; display: grid; gap: 12px;
+}
+.cupom::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -10px; height: 10px;
+  background: linear-gradient(-45deg, transparent 6px, var(--cupom) 0) 0 0 / 14px 10px repeat-x,
+              linear-gradient(45deg, transparent 6px, var(--cupom) 0) 0 0 / 14px 10px repeat-x;
+}
+.cupom-cab { text-align: center; display: grid; gap: 2px; padding-bottom: 12px; border-bottom: 2px dashed var(--areia-clara); }
+.cupom-cab b { font-size: 13px; letter-spacing: .16em; text-transform: uppercase; font-weight: 900; }
+.cupom-cab span { font-size: 14px; font-weight: 700; color: var(--areia-escura); }
+.cupom-linha { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.cupom-nome { font-weight: 800; min-width: 0; overflow-wrap: anywhere; }
+.cupom-nome span { font-family: var(--mono); color: var(--areia-escura); font-weight: 600; margin-left: 4px; }
+.passo { display: grid; grid-template-columns: 44px 52px 44px; align-items: center; }
+.passo button { height: 44px; border: 0; border-radius: 10px; background: var(--areia-clara); font-size: 22px; font-weight: 900; }
+.passo output { text-align: center; font: 600 20px var(--mono); }
+.cupom-total {
+  display: flex; justify-content: space-between; align-items: baseline; padding-top: 12px; border-top: 2px dashed var(--areia-clara);
+  font-weight: 900; letter-spacing: .08em; text-transform: uppercase; font-size: 14px;
+}
+.cupom-total b { font: 600 26px var(--mono); letter-spacing: 0; text-transform: none; }
+.data-linha { display: grid; gap: 8px; margin-top: 8px; }
+.atalhos { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* resultado */
+.selo { display: grid; justify-items: center; gap: 10px; text-align: center; padding-block: 12px 4px; }
+.selo svg { width: 84px; height: 84px; }
+.selo h1 { font-size: 30px; }
+.selo p { margin: 0; font-weight: 700; }
+.discord {
+  background: var(--discord-fundo); border-left: 4px solid var(--discord); border-radius: 10px; padding: 12px 14px;
+  display: grid; gap: 6px; font-size: 15px;
+}
+.discord-cab { font-size: 12px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; color: var(--discord); }
+.discord-texto { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; font: inherit; }
+
+/* lançados hoje */
+.hoje { display: grid; gap: 8px; }
+.hoje-linha {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center;
+  background: var(--papel); border-radius: 12px; padding: 10px 12px; font-size: 15px;
+}
+.hoje-linha .hora { font: 600 14px var(--mono); color: var(--areia-escura); }
+.hoje-linha .o-que { font-weight: 800; min-width: 0; }
+.hoje-linha .o-que small { display: block; font-weight: 700; color: var(--areia-escura); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.estado { font-size: 12px; font-weight: 900; border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
+.estado.enviado { background: var(--ok-fundo); color: var(--ok); }
+.estado.pendente { background: var(--alerta-fundo); color: var(--alerta); }
+.estado.erro { background: var(--erro-fundo); color: var(--erro); }
+.vazio { color: var(--areia-escura); font-weight: 700; font-size: 15px; margin: 0; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } .tecla.bateu { transform: none; } }
+@media (max-width: 340px) { .teclado { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-dentro">
+    <div class="marca"><small>Apontamento de produção</small><strong id="nome-empresa">…</strong></div>
+    <div class="quem" id="quem" hidden><span id="nome-operador"></span><button class="btn-sair" id="btn-sair" type="button">Sair</button></div>
+  </div>
+</header>
+<div class="faixa-demo" id="faixa-demo" hidden>Demonstração com os itens do piloto. Nada é gravado no Cloudfy nem enviado ao Discord.</div>
+
+<main>
+  <!-- 1. login -->
+  <section class="tela" id="t-login" hidden>
+    <h1>Entrar</h1>
+    <form class="cartao" id="form-login" novalidate>
+      <label for="usuario">Usuário<input type="text" id="usuario" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+      <label for="senha">Senha<input type="password" id="senha" autocomplete="current-password" required></label>
+      <p class="msg erro" id="login-erro" hidden></p>
+      <button class="btn btn-pri" id="btn-entrar" type="submit">Entrar</button>
+    </form>
+  </section>
+
+  <!-- 2. PDV: cada toque soma 1 unidade -->
+  <section class="tela" id="t-pdv" hidden>
+    <h1>Toque no que foi produzido</h1>
+    <div class="filtros" id="filtros" role="group" aria-label="Grupos"></div>
+    <div class="tela" id="teclado"></div>
+    <div class="secao">
+      <h2>Lançados hoje</h2>
+      <div class="hoje" id="hoje"></div>
+    </div>
+  </section>
+
+  <!-- 3. extrato para conferir -->
+  <section class="tela" id="t-extrato" hidden>
+    <button class="voltar" type="button" id="voltar-pdv">Continuar somando</button>
+    <h1>Confira o extrato</h1>
+    <div id="cupom"></div>
+    <div class="data-linha">
+      <h2>Data da produção</h2>
+      <div class="atalhos" id="atalhos-data"></div>
+      <input type="date" id="data" aria-label="Data da produção">
+    </div>
+    <p class="msg erro" id="extrato-erro" hidden></p>
+    <p class="msg alerta" id="extrato-fase"></p>
+  </section>
+
+  <!-- 4. resultado -->
+  <section class="tela" id="t-resultado" hidden>
+    <div id="resultado" class="tela"></div>
+  </section>
+</main>
+
+<div class="barra" id="barra" hidden><div class="barra-dentro" id="barra-dentro"></div></div>
+
+<script>window.APP_CONFIG = window.APP_CONFIG || null;</script>
+<script src="config.js" onerror="void 0"></script>
+<script>
+"use strict";
+/* ============================================================ utilidades */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const hojeISO = (desloc = 0) => {
+  const d = new Date(); d.setDate(d.getDate() + desloc);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+const fmtData = (iso) => iso.split("-").reverse().join("/");
+const nomeDaLinha = (l) => (l.rotulo ? `${l.item} ${l.rotulo}` : l.item);
+const novaChave = () => (crypto.randomUUID ? crypto.randomUUID()
+  : "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) => (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)));
+function carregarScript(src) {
+  return new Promise((ok, falha) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = () => falha(new Error("sem conexão para carregar o app")); document.head.appendChild(s); });
+}
+/* mesmo texto de mensagemDiscord() em supabase/functions/apontar-producao/montagem.ts */
+function mensagemDiscord(d) {
+  const linhas = [`**Produção da cozinha lançada**${d.empresa ? ` · ${d.empresa}` : ""}`,
+    `Lote **${d.lote}** no Cloudfy · produção de ${d.data} · por ${d.operador}`,
+    ...d.linhas.map((l) => `• ${nomeDaLinha(l)} — **${l.unidades} un**`), `Total: **${d.totalUnidades} un**`];
+  if (d.situacao !== 20) linhas.push("Aguardando aprovação no Cloudfy (fase de teste)");
+  return linhas.join("\n");
+}
+const discordParaHtml = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+
+/* ============================================================ dados: pela função do servidor (real)
+   O celular NÃO tem chave do Supabase: login, itens, lista de hoje e lançamento passam pela
+   função apontar-producao, que guarda as chaves no servidor. Aqui fica só a sessão do login. */
+async function apiReal(cfg) {
+  const CH = `apont-sessao:${cfg.empresa || ""}`;
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(CH) || "null"); } catch (_) { /* sem armazenamento */ }
+  const salvar = () => { try { s ? localStorage.setItem(CH, JSON.stringify(s)) : localStorage.removeItem(CH); } catch (_) { /* sem armazenamento */ } };
+
+  async function chamar(corpo, comLogin = true, jaRenovou = false) {
+    if (comLogin && s && !jaRenovou && s.expires_at && s.expires_at * 1000 - Date.now() < 60000) await renovar();
+    let r;
+    try {
+      r = await fetch(cfg.funcaoUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(comLogin && s ? { Authorization: `Bearer ${s.access_token}` } : {}) },
+        body: JSON.stringify(corpo),
+      });
+    } catch (_) {
+      throw new Error("Sem internet. Confira o Wi-Fi e tente de novo.");
+    }
+    const j = await r.json().catch(() => ({}));
+    if (r.status === 401 && comLogin && !jaRenovou && s && s.refresh_token && (await renovar())) return chamar(corpo, true, true);
+    if (!r.ok) throw new Error(j.erro || `O servidor respondeu ${r.status}. Tente de novo.`);
+    return j;
+  }
+  async function renovar() {
+    try {
+      const j = await chamar({ acao: "renovar", refresh_token: s.refresh_token }, false);
+      s = { ...s, ...j }; salvar(); return true;
+    } catch (_) {
+      s = null; salvar(); return false;
+    }
+  }
+  return {
+    demo: false, empresa: cfg.empresa || "", diasRetro: Number(cfg.diasRetro ?? 7),
+    async sessao() { return !!s; },
+    async entrar(usuario, senha) {
+      const u = usuario.trim().toLowerCase();
+      const email = u.includes("@") ? u : `${u}@${cfg.dominioLogin}`;
+      const j = await chamar({ acao: "entrar", email, senha }, false);
+      s = { access_token: j.access_token, refresh_token: j.refresh_token, expires_at: j.expires_at, nome: j.nome };
+      salvar();
+    },
+    async sair() { s = null; salvar(); },
+    async operador() { return s ? s.nome : null; },
+    async variedades() { return (await chamar({ acao: "itens" })).itens; },
+    async hoje() { return (await chamar({ acao: "hoje" })).lancamentos; },
+    async lancar(corpo) { return await chamar(corpo); },
+  };
+}
+
+/* ============================================================ dados: demonstração */
+function apiDemo(D) {
+  const lancados = [];
+  let lote = 40;
+  const espera = (ms) => new Promise((r) => setTimeout(r, ms));
+  return {
+    demo: true, empresa: D.empresa, diasRetro: 7,
+    async sessao() { return false; },
+    async entrar() { await espera(250); },
+    async sair() {},
+    async operador() { return D.operador; },
+    async variedades() { return D.variedades; },
+    async hoje() { return lancados.slice().reverse(); },
+    async lancar(corpo) {
+      await espera(900);
+      const ja = lancados.find((l) => l.chave === corpo.chave);
+      if (ja) return { ok: true, repetido: true, lote: ja.cloudfy_lote, situacao: 10, discord: "enviado" };
+      const linhas = corpo.itens.map((x) => ({ ...D.variedades.find((v) => v.id === x.variedade_id), unidades: x.unidades }));
+      const total = linhas.reduce((a, l) => a + l.unidades, 0);
+      lote += 1;
+      lancados.push({ chave: corpo.chave, criado_em: new Date().toISOString(), itens: linhas, total_unidades: total, status: "enviado", situacao: 10, cloudfy_lote: String(lote), operador_nome: D.operador, discord_status: "enviado" });
+      return { ok: true, lote: String(lote), situacao: 10, total_unidades: total, discord: "enviado" };
+    },
+  };
+}
+
+/* ============================================================ estado */
+const E = { api: null, variedades: [], filtro: "Todos", carrinho: new Map(), data: hojeISO(), chave: null, enviando: false, ultimo: null };
+const TELAS = ["login", "pdv", "extrato", "resultado"];
+const chaveLocal = () => `apont-extrato:${E.api?.empresa || ""}`;
+
+function guardar() {
+  try { localStorage.setItem(chaveLocal(), JSON.stringify({ itens: [...E.carrinho], data: E.data, dia: hojeISO() })); } catch (_) { /* sem armazenamento */ }
+}
+function recuperar() {
+  try {
+    const g = JSON.parse(localStorage.getItem(chaveLocal()) || "null");
+    if (!g || g.dia !== hojeISO()) return;
+    const validos = new Set(E.variedades.map((v) => v.id));
+    E.carrinho = new Map(g.itens.filter(([id, n]) => validos.has(id) && n > 0));
+    E.data = g.data || hojeISO();
+  } catch (_) { /* sem armazenamento */ }
+}
+function mexeu() { E.chave = null; guardar(); }
+const totalUnidades = () => [...E.carrinho.values()].reduce((a, n) => a + n, 0);
+const ordenadas = () => E.variedades.slice().sort((a, b) =>
+  a.grupo_ordem - b.grupo_ordem || a.item_ordem - b.item_ordem || a.ordem - b.ordem || a.item.localeCompare(b.item, "pt-BR"));
+const linhasDoExtrato = () => ordenadas().filter((v) => E.carrinho.get(v.id) > 0).map((v) => ({ ...v, unidades: E.carrinho.get(v.id) }));
+
+function ir(tela) {
+  for (const t of TELAS) $(`t-${t}`).hidden = t !== tela;
+  E.tela = tela;
+  barra();
+  window.scrollTo(0, 0);
+  if (tela === "pdv") desenharHoje();
+}
+
+/* ============================================================ barra de baixo */
+function barra() {
+  const b = $("barra-dentro");
+  const total = totalUnidades(), nLinhas = E.carrinho.size;
+  if (E.tela === "pdv") {
+    b.innerHTML = `<div class="resumo"><b>${total} un</b><small>${nLinhas ? `${nLinhas} ${nLinhas === 1 ? "item" : "itens"}` : "nada somado"}</small></div>
+      <button class="btn btn-pri" id="btn-extrato" type="button" ${total ? "" : "disabled"}>Ver extrato</button>`;
+    $("btn-extrato").addEventListener("click", abrirExtrato);
+  } else if (E.tela === "extrato") {
+    b.innerHTML = `<div class="resumo"><b>${total} un</b><small>no extrato</small></div>
+      <button class="btn btn-pri" id="btn-lancar" type="button" ${total && !E.enviando ? "" : "disabled"}>${E.enviando ? "Lançando…" : "Lançar no Cloudfy"}</button>`;
+    $("btn-lancar").addEventListener("click", lancar);
+  } else if (E.tela === "resultado" && E.ultimo) {
+    b.innerHTML = E.ultimo.ok
+      ? `<button class="btn btn-pri" type="button" id="btn-novo">Novo apontamento</button>`
+      : `<button class="btn btn-sec" type="button" id="btn-ver-extrato">Extrato</button><button class="btn btn-pri" type="button" id="btn-repetir">Tentar de novo</button>`;
+    $("btn-novo")?.addEventListener("click", () => { desenharPdv(); ir("pdv"); });
+    $("btn-ver-extrato")?.addEventListener("click", abrirExtrato);
+    $("btn-repetir")?.addEventListener("click", () => { ir("extrato"); desenharExtrato(); lancar(); });
+  } else { b.innerHTML = ""; }
+  $("barra").hidden = !b.innerHTML;
+}
+
+/* ============================================================ PDV */
+function desenharPdv() {
+  const grupos = [...new Set(ordenadas().map((v) => v.grupo))];
+  if (!grupos.includes(E.filtro)) E.filtro = "Todos";
+  $("filtros").innerHTML = ["Todos", ...grupos].map((g) => `<button class="chip" type="button" data-g="${esc(g)}" aria-pressed="${E.filtro === g}">${esc(g)}</button>`).join("");
+  $("filtros").querySelectorAll("[data-g]").forEach((b) => b.addEventListener("click", () => { E.filtro = b.dataset.g; desenharPdv(); }));
+  if (!E.variedades.length) { $("teclado").innerHTML = `<p class="msg alerta">Nenhum item liberado para apontar. Fale com o responsável.</p>`; return; }
+  const mostrar = grupos.filter((g) => E.filtro === "Todos" || g === E.filtro);
+  $("teclado").innerHTML = mostrar.map((g) => `
+    <div class="secao"><h2>${esc(g)}</h2><div class="teclado">
+      ${ordenadas().filter((v) => v.grupo === g).map((v) => `
+        <div class="tecla-caixa" id="caixa-${v.id}">${tecla(v)}</div>`).join("")}
+    </div></div>`).join("");
+  $("teclado").querySelectorAll(".tecla-caixa").forEach(ligarTecla);
+}
+
+function tecla(v) {
+  const n = E.carrinho.get(v.id) || 0;
+  return `<button class="tecla${n ? " tem" : ""}" type="button" data-mais="${v.id}" aria-label="${esc(nomeDaLinha(v))}: ${n} no extrato. Toque para somar 1.">
+      <span class="tecla-nome">${esc(v.item)}</span><span class="tecla-var">${esc(v.rotulo || "un")}</span></button>
+    ${n ? `<span class="tecla-qtd">${n}</span><button class="tecla-menos" type="button" data-menos="${v.id}" aria-label="Tirar 1 de ${esc(nomeDaLinha(v))}">−</button>` : ""}`;
+}
+
+function ligarTecla(caixa) {
+  caixa.querySelector("[data-mais]").addEventListener("click", (ev) => somar(Number(ev.currentTarget.dataset.mais), 1));
+  caixa.querySelector("[data-menos]")?.addEventListener("click", (ev) => somar(Number(ev.currentTarget.dataset.menos), -1));
+}
+
+function somar(id, d) {
+  const n = Math.max(0, Math.min(999, (E.carrinho.get(id) || 0) + d));
+  if (n) E.carrinho.set(id, n); else E.carrinho.delete(id);
+  mexeu();
+  const caixa = $(`caixa-${id}`);
+  if (caixa) {
+    caixa.innerHTML = tecla(E.variedades.find((v) => v.id === id));
+    ligarTecla(caixa);
+    if (d > 0) { const t = caixa.querySelector(".tecla"); t.classList.add("bateu"); setTimeout(() => t.classList.remove("bateu"), 90); }
+    if (navigator.vibrate) { try { navigator.vibrate(12); } catch (_) { /* sem vibração */ } }
+  }
+  if (E.tela === "extrato") desenharExtrato();
+  barra();
+}
+
+/* ============================================================ extrato */
+function abrirExtrato() {
+  $("extrato-erro").hidden = true;
+  desenharExtrato();
+  ir("extrato");
+}
+
+function desenharExtrato() {
+  const linhas = linhasDoExtrato();
+  const total = totalUnidades();
+  $("cupom").innerHTML = `
+    <div class="cupom">
+      <div class="cupom-cab"><b>Extrato de produção</b><span>${esc(E.api.empresa)} · ${esc($("nome-operador").textContent)}</span><span class="num">${fmtData(E.data)}</span></div>
+      ${linhas.length ? linhas.map((l) => `
+        <div class="cupom-linha">
+          <div class="cupom-nome">${esc(l.item)}${l.rotulo ? `<span>${esc(l.rotulo)}</span>` : ""}</div>
+          <div class="passo"><button type="button" data-ext="${l.id}" data-d="-1" aria-label="Tirar 1">−</button><output class="num">${l.unidades}</output><button type="button" data-ext="${l.id}" data-d="1" aria-label="Somar 1">+</button></div>
+        </div>`).join("") : `<p class="vazio">O extrato está vazio. Volte e toque nos itens.</p>`}
+      <div class="cupom-total"><span>Total</span><b>${total} un</b></div>
+    </div>`;
+  $("cupom").querySelectorAll("[data-ext]").forEach((b) => b.addEventListener("click", () => somar(Number(b.dataset.ext), Number(b.dataset.d))));
+  const opc = [["Hoje", hojeISO()], ["Ontem", hojeISO(-1)]];
+  $("atalhos-data").innerHTML = opc.map(([r, iso]) => `<button class="chip" type="button" data-dt="${iso}" aria-pressed="${E.data === iso}">${r}</button>`).join("");
+  $("atalhos-data").querySelectorAll("[data-dt]").forEach((b) => b.addEventListener("click", () => { E.data = b.dataset.dt; mexeu(); desenharExtrato(); }));
+  const d = $("data"); d.min = hojeISO(-E.api.diasRetro); d.max = hojeISO(); d.value = E.data;
+  $("extrato-fase").textContent = "Fase de teste: o lote fica salvo no Cloudfy aguardando aprovação; o estoque só muda quando alguém aprovar lá.";
+}
+
+/* lançamento: um extrato = um lote (a chave vai junto e não se repete) */
+async function lancar() {
+  if (E.enviando || !totalUnidades()) return;
+  if (E.data > hojeISO() || E.data < hojeISO(-E.api.diasRetro)) {
+    $("extrato-erro").textContent = `A data precisa estar entre ${fmtData(hojeISO(-E.api.diasRetro))} e hoje.`;
+    $("extrato-erro").hidden = false; return;
+  }
+  if (!E.chave) E.chave = novaChave();
+  E.enviando = true; barra();
+  const linhas = linhasDoExtrato();
+  const corpo = { acao: "apontar", data: E.data, chave: E.chave, itens: linhas.map((l) => ({ variedade_id: l.id, unidades: l.unidades })) };
+  try {
+    const r = await E.api.lancar(corpo);
+    E.ultimo = { ok: true, r, linhas, data: E.data, total: totalUnidades() };
+    E.carrinho = new Map(); E.chave = null; E.data = hojeISO(); guardar();
+  } catch (e) {
+    E.ultimo = { ok: false, erro: e.message };
+  } finally {
+    E.enviando = false;
+  }
+  desenharResultado();
+}
+
+function desenharResultado() {
+  const u = E.ultimo;
+  const icone = u.ok
+    ? `<svg viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="40" fill="var(--ok-fundo)"/><path d="M25 43l11 11 23-25" fill="none" stroke="var(--ok)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+    : `<svg viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="40" fill="var(--erro-fundo)"/><path d="M42 22v26M42 60v2" fill="none" stroke="var(--erro)" stroke-width="7" stroke-linecap="round"/></svg>`;
+  if (!u.ok) {
+    $("resultado").innerHTML = `<div class="selo">${icone}<h1>Não foi lançado</h1><p class="msg erro">${esc(u.erro)}</p><p>O extrato continua guardado.</p></div>`;
+  } else {
+    const r = u.r;
+    const texto = mensagemDiscord({ empresa: E.api.empresa, lote: r.lote, situacao: r.situacao, data: fmtData(u.data), operador: $("nome-operador").textContent, linhas: u.linhas, totalUnidades: u.total });
+    const disc = r.discord === "enviado" ? (E.api.demo ? "Mensagem que vai para o Discord da empresa" : "Avisado no Discord da empresa")
+      : r.discord === "erro" ? "Lançado, mas o aviso no Discord falhou" : "Discord ainda não ligado para esta empresa";
+    $("resultado").innerHTML = `
+      <div class="selo">${icone}<h1>${r.situacao === 20 ? "Produção lançada" : "Lote salvo no Cloudfy"}</h1>
+        <p><b class="num">${u.total} un</b> · lote nº <b class="num">${esc(r.lote)}</b> · ${fmtData(u.data)}${r.repetido ? " · já tinha sido lançado" : ""}</p></div>
+      ${r.situacao === 20 ? "" : `<p class="msg alerta">Aguardando aprovação no Cloudfy (fase de teste).</p>`}
+      <div class="discord"><div class="discord-cab">${disc}</div>${r.discord === "enviado" ? `<pre class="discord-texto">${discordParaHtml(texto)}</pre>` : ""}</div>`;
+  }
+  ir("resultado");
+}
+
+/* ============================================================ lançados hoje */
+async function desenharHoje() {
+  const alvo = $("hoje");
+  try {
+    const ls = await E.api.hoje();
+    if (!ls.length) { alvo.innerHTML = `<p class="vazio">Nada lançado hoje ainda.</p>`; return; }
+    alvo.innerHTML = ls.map((l) => {
+      const hora = new Date(l.criado_em).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+      const est = l.status === "erro" ? ["erro", "não lançou"]
+        : l.status === "enviando" ? ["pendente", "enviando"]
+        : l.situacao === 20 ? ["enviado", `lote ${l.cloudfy_lote}`] : ["pendente", `lote ${l.cloudfy_lote} · aprovar`];
+      const itens = (l.itens || []).map((x) => `${nomeDaLinha(x)} ×${x.unidades}`).join(", ");
+      return `<div class="hoje-linha"><span class="hora">${hora}</span><span class="o-que">${l.total_unidades} un · ${esc(l.operador_nome)}<small>${esc(itens)}</small></span><span class="estado ${est[0]}">${esc(est[1])}</span></div>`;
+    }).join("");
+  } catch (e) {
+    alvo.innerHTML = `<p class="vazio">Não deu para ler a lista de hoje (${esc(e.message)}).</p>`;
+  }
+}
+
+/* ============================================================ início */
+async function entrarNoApp() {
+  const nome = await E.api.operador();
+  if (!nome) { await E.api.sair(); throw new Error("Este login não está liberado para apontar produção."); }
+  $("nome-operador").textContent = nome;
+  $("quem").hidden = false;
+  E.variedades = (await E.api.variedades()).map((v) => ({ ...v, id: Number(v.id) }));
+  recuperar();
+  desenharPdv();
+  ir("pdv");
+}
+
+$("form-login").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const btn = $("btn-entrar"); btn.disabled = true; $("login-erro").hidden = true;
+  try {
+    await E.api.entrar($("usuario").value, $("senha").value);
+    $("senha").value = "";
+    await entrarNoApp();
+  } catch (e) {
+    $("login-erro").textContent = e.message; $("login-erro").hidden = false;
+  } finally { btn.disabled = false; }
+});
+$("btn-sair").addEventListener("click", async () => { await E.api.sair(); $("quem").hidden = true; ir("login"); });
+$("voltar-pdv").addEventListener("click", () => { desenharPdv(); ir("pdv"); });
+$("data").addEventListener("change", (ev) => { E.data = ev.target.value || hojeISO(); mexeu(); desenharExtrato(); });
+
+(async function iniciar() {
+  const cfg = window.APP_CONFIG;
+  try {
+    if (cfg && cfg.funcaoUrl) {
+      $("nome-empresa").textContent = cfg.empresa || "";
+      document.title = `Apontamento · ${cfg.empresa || ""}`;
+      E.api = await apiReal(cfg);
+      if (await E.api.sessao()) { try { await entrarNoApp(); return; } catch (_) { /* cai no login */ } }
+      ir("login");
+    } else {
+      if (!window.DEMO) await carregarScript("demo.js");
+      E.api = apiDemo(window.DEMO);
+      $("nome-empresa").textContent = window.DEMO.empresa;
+      $("faixa-demo").hidden = false;
+      $("usuario").value = "cozinha"; $("senha").value = "demonstracao";
+      $("btn-entrar").textContent = "Entrar na demonstração";
+      ir("login");
+    }
+  } catch (e) {
+    $("nome-empresa").textContent = "App indisponível";
+    $("t-login").hidden = false;
+    $("login-erro").textContent = `${e.message}. Recarregue a página.`; $("login-erro").hidden = false;
+  }
+})();
+</script>
+</body>
+</html>

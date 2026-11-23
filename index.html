@@ -158,8 +158,8 @@ input:focus { border-color: var(--laranja); outline: none; }
   background: var(--papel); box-shadow: var(--sombra); padding: 10px; text-align: left;
   display: grid; grid-template-rows: 1fr auto; gap: 4px; transition: transform .08s ease;
 }
-.tecla-nome { font-size: 15px; font-weight: 900; line-height: 1.15; overflow-wrap: anywhere; align-self: start; }
-.tecla-var { font: 600 19px/1 var(--mono); color: var(--areia-escura); }
+.tecla-nome { font-size: 14px; font-weight: 900; line-height: 1.15; overflow-wrap: anywhere; align-self: start; }
+.tecla-var { font: 600 27px/1.02 var(--mono); letter-spacing: -.02em; color: var(--tinta); overflow-wrap: anywhere; }
 .tecla.tem { border-color: var(--laranja); background: var(--laranja-suave); }
 .tecla.tem .tecla-var { color: var(--laranja-texto); }
 .tecla.bateu { transform: scale(.94); }
@@ -169,9 +169,35 @@ input:focus { border-color: var(--laranja); outline: none; }
   box-shadow: 0 2px 6px rgba(0,0,0,.25); pointer-events: none;
 }
 .tecla-menos {
-  position: absolute; right: 6px; bottom: 6px; width: 38px; height: 38px; border-radius: 12px; border: 0;
+  position: absolute; left: -6px; top: -8px; width: 38px; height: 38px; border-radius: 999px; border: 0;
   background: var(--marrom); color: #FFF8E7; font-size: 26px; font-weight: 900; line-height: 1;
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
 }
+.tecla.tem .tecla-nome { padding-left: 26px; padding-right: 20px; }
+@media (max-width: 430px) {
+  .marca small { font-size: 10px; letter-spacing: .08em; }
+  .quem { gap: 6px; }
+  .quem span { max-width: 5.5em; }
+  .btn-cad, .btn-sair { padding: 6px 9px; }
+}
+
+/* cadastro de produções (só administrador) */
+.btn-cad { border: 1px solid rgba(255, 248, 231, .35); background: transparent; color: #FFF8E7; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 800; }
+.cad-topo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.cad-topo span { font-size: 14px; font-weight: 700; color: var(--areia-escura); min-width: 0; }
+.cad-produto { margin: -6px 0 0; font-size: 14px; font-weight: 700; min-height: 1.4em; }
+.cad-produto.ok { color: var(--ok); }
+.cad-produto.ruim { color: var(--erro); }
+.cad-produto.aviso { color: var(--alerta); }
+.cad-grupo { display: grid; gap: 6px; }
+.cad-linha {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; align-items: center;
+  background: var(--papel); border-radius: 12px; padding: 10px 12px; font-size: 14px;
+}
+.cad-linha b { font-size: 15px; }
+.cad-linha small { display: block; color: var(--areia-escura); font-weight: 700; font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
+.btn-apagar { border: 2px solid var(--erro-fundo); background: transparent; color: var(--erro); border-radius: 10px; min-height: 40px; padding: 0 12px; font-weight: 900; font-size: 14px; }
+.btn-apagar.confirmar { background: var(--erro); color: #fff; border-color: var(--erro); }
 
 /* extrato (cupom) */
 .cupom {
@@ -236,7 +262,7 @@ input:focus { border-color: var(--laranja); outline: none; }
 <header class="topo">
   <div class="topo-dentro">
     <div class="marca"><small>Apontamento de produção</small><strong id="nome-empresa">…</strong></div>
-    <div class="quem" id="quem" hidden><span id="nome-operador"></span><button class="btn-sair" id="btn-sair" type="button">Sair</button></div>
+    <div class="quem" id="quem" hidden><span id="nome-operador"></span><button class="btn-cad" id="btn-cad" type="button" hidden>Cadastro</button><button class="btn-sair" id="btn-sair" type="button">Sair</button></div>
   </div>
 </header>
 <div class="faixa-demo" id="faixa-demo" hidden>Demonstração com os itens do piloto. Nada é gravado no Cloudfy nem enviado ao Discord.</div>
@@ -281,6 +307,29 @@ input:focus { border-color: var(--laranja); outline: none; }
   <!-- 4. resultado -->
   <section class="tela" id="t-resultado" hidden>
     <div id="resultado" class="tela"></div>
+  </section>
+
+  <!-- 5. cadastro de produções (só administrador) -->
+  <section class="tela" id="t-cadastro" hidden>
+    <button class="voltar" type="button" id="voltar-cad">Voltar ao apontamento</button>
+    <h1>Cadastro de produções</h1>
+    <div class="cartao cad-topo">
+      <span id="cad-lista-info">A lista de produtos do Cloudfy ainda não foi baixada neste aparelho.</span>
+      <button class="btn btn-sec" id="btn-baixar" type="button">Baixar lista de produtos</button>
+    </div>
+    <form class="cartao" id="form-cad" novalidate>
+      <h2>Nova produção</h2>
+      <label for="cad-grupo">Grupo<input type="text" id="cad-grupo" list="dl-grupos" autocomplete="off" placeholder="Ex.: Molhos"></label>
+      <label for="cad-item">Produção<input type="text" id="cad-item" list="dl-itens" autocomplete="off" placeholder="Ex.: Maionese de Alho"></label>
+      <label for="cad-rotulo">Porção (o que aparece grande no quadrado)<input type="text" id="cad-rotulo" autocomplete="off" placeholder="Ex.: 500 g · vazio se não tiver"></label>
+      <label for="cad-codigo">Código de referência no Cloudfy<input type="text" id="cad-codigo" inputmode="numeric" autocomplete="off" placeholder="Ex.: 10217"></label>
+      <p class="cad-produto" id="cad-produto" aria-live="polite"></p>
+      <label for="cad-qtd">Quanto 1 unidade vale no Cloudfy <span id="cad-und"></span><input type="text" id="cad-qtd" inputmode="decimal" autocomplete="off" placeholder="Ex.: 1 (porção) ou 0,5 (kg)"></label>
+      <p class="msg erro" id="cad-erro" hidden></p>
+      <button class="btn btn-pri" type="submit" id="btn-cad-salvar">Salvar produção</button>
+    </form>
+    <div class="secao"><h2>Produções no app</h2><div class="tela" id="cad-lista"></div></div>
+    <datalist id="dl-grupos"></datalist><datalist id="dl-itens"></datalist>
   </section>
 </main>
 
@@ -360,14 +409,21 @@ async function apiReal(cfg) {
     },
     async sair() { s = null; salvar(); },
     async operador() { return s ? s.nome : null; },
-    async variedades() { return (await chamar({ acao: "itens" })).itens; },
+    /** Quadrados + situação de lançamento + se o login é administrador. */
+    async carregar() { return await chamar({ acao: "itens" }); },
     async hoje() { return (await chamar({ acao: "hoje" })).lancamentos; },
     async lancar(corpo) { return await chamar(corpo); },
+    // tela Cadastro (a função recusa quem não é administrador)
+    async produtos() { return await chamar({ acao: "produtos" }); },
+    async conferirProduto(produto) { return await chamar({ acao: "conferir_produto", produto }); },
+    async salvarItem(dados) { return await chamar({ acao: "salvar_item", ...dados }); },
+    async apagarItem(id) { return await chamar({ acao: "apagar_item", id }); },
   };
 }
 
 /* ============================================================ dados: demonstração */
 function apiDemo(D) {
+  const SIT = 20; // a demonstração mostra o app aprovando o lote direto (situação 20)
   const lancados = [];
   let lote = 40;
   const espera = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -377,24 +433,45 @@ function apiDemo(D) {
     async entrar() { await espera(250); },
     async sair() {},
     async operador() { return D.operador; },
-    async variedades() { return D.variedades; },
+    async carregar() { return { itens: D.variedades.filter((v) => v.ativo !== false), situacao: SIT, admin: true }; },
     async hoje() { return lancados.slice().reverse(); },
     async lancar(corpo) {
       await espera(900);
       const ja = lancados.find((l) => l.chave === corpo.chave);
-      if (ja) return { ok: true, repetido: true, lote: ja.cloudfy_lote, situacao: 10, discord: "enviado" };
+      if (ja) return { ok: true, repetido: true, lote: ja.cloudfy_lote, situacao: SIT, discord: "enviado" };
       const linhas = corpo.itens.map((x) => ({ ...D.variedades.find((v) => v.id === x.variedade_id), unidades: x.unidades }));
       const total = linhas.reduce((a, l) => a + l.unidades, 0);
       lote += 1;
-      lancados.push({ chave: corpo.chave, criado_em: new Date().toISOString(), itens: linhas, total_unidades: total, status: "enviado", situacao: 10, cloudfy_lote: String(lote), operador_nome: D.operador, discord_status: "enviado" });
-      return { ok: true, lote: String(lote), situacao: 10, total_unidades: total, discord: "enviado" };
+      lancados.push({ chave: corpo.chave, criado_em: new Date().toISOString(), itens: linhas, total_unidades: total, status: "enviado", situacao: SIT, cloudfy_lote: String(lote), operador_nome: D.operador, discord_status: "enviado" });
+      return { ok: true, lote: String(lote), situacao: SIT, total_unidades: total, discord: "enviado" };
     },
+    async produtos() { await espera(600); return { produtos: D.produtos || [], baixado_em: new Date().toISOString() }; },
+    async conferirProduto(produto) {
+      await espera(400);
+      const p = (D.produtos || []).find((x) => x.c === produto);
+      if (!p) return { existe: false, codigo: produto };
+      const f = D.fichas[produto];
+      const insumos = f ? f.componentes.map((c) => ({ codigo: c.codigo, nome: c.nome, quantidade: c.quantidade, unidade: c.unidade })) : [];
+      return { existe: true, codigo: produto, nome: p.n, unidade: p.u, rendimento: f ? f.rendimento : (D.com_ficha || []).includes(produto) ? 1 : 0, insumos, kg_por_unidade: 0 };
+    },
+    async salvarItem(d) {
+      await espera(500);
+      const p = (D.produtos || []).find((x) => x.c === d.produto);
+      if (!p) throw new Error(`o código ${d.produto} não existe no Cloudfy`);
+      const v = D.variedades.find((x) => x.item === d.item && x.rotulo === d.rotulo);
+      const novo = { grupo: d.grupo, item: d.item, rotulo: d.rotulo, produto: d.produto, produto_nome: p.n, unidade: p.u, quantidade: Number(d.quantidade), ativo: true,
+        grupo_ordem: 99, item_ordem: 99, ordem: 99 };
+      if (v) Object.assign(v, novo); else D.variedades.push({ ...novo, id: Math.max(0, ...D.variedades.map((x) => x.id)) + 1 });
+      return { ok: true };
+    },
+    async apagarItem(id) { await espera(300); const v = D.variedades.find((x) => x.id === id); if (v) v.ativo = false; return { ok: true }; },
   };
 }
 
 /* ============================================================ estado */
-const E = { api: null, variedades: [], filtro: "Todos", carrinho: new Map(), data: hojeISO(), chave: null, enviando: false, ultimo: null };
-const TELAS = ["login", "pdv", "extrato", "resultado"];
+const E = { api: null, variedades: [], filtro: "Todos", carrinho: new Map(), data: hojeISO(), chave: null, enviando: false, ultimo: null,
+  situacao: 10, admin: false, produtos: null, produtosEm: null };
+const TELAS = ["login", "pdv", "extrato", "resultado", "cadastro"];
 const chaveLocal = () => `apont-extrato:${E.api?.empresa || ""}`;
 
 function guardar() {
@@ -429,7 +506,7 @@ function barra() {
   const total = totalUnidades(), nLinhas = E.carrinho.size;
   if (E.tela === "pdv") {
     b.innerHTML = `<div class="resumo"><b>${total} un</b><small>${nLinhas ? `${nLinhas} ${nLinhas === 1 ? "item" : "itens"}` : "nada somado"}</small></div>
-      <button class="btn btn-pri" id="btn-extrato" type="button" ${total ? "" : "disabled"}>Ver extrato</button>`;
+      <button class="btn btn-pri" id="btn-extrato" type="button" ${total ? "" : "disabled"}>Enviar</button>`;
     $("btn-extrato").addEventListener("click", abrirExtrato);
   } else if (E.tela === "extrato") {
     b.innerHTML = `<div class="resumo"><b>${total} un</b><small>no extrato</small></div>
@@ -514,7 +591,9 @@ function desenharExtrato() {
   $("atalhos-data").innerHTML = opc.map(([r, iso]) => `<button class="chip" type="button" data-dt="${iso}" aria-pressed="${E.data === iso}">${r}</button>`).join("");
   $("atalhos-data").querySelectorAll("[data-dt]").forEach((b) => b.addEventListener("click", () => { E.data = b.dataset.dt; mexeu(); desenharExtrato(); }));
   const d = $("data"); d.min = hojeISO(-E.api.diasRetro); d.max = hojeISO(); d.value = E.data;
-  $("extrato-fase").textContent = "Fase de teste: o lote fica salvo no Cloudfy aguardando aprovação; o estoque só muda quando alguém aprovar lá.";
+  $("extrato-fase").textContent = E.situacao === 20
+    ? "Ao lançar, o lote já sai aprovado: a produção entra no estoque e os insumos saem na hora."
+    : "Fase de teste: o lote fica salvo no Cloudfy aguardando aprovação; o estoque só muda quando alguém aprovar lá.";
 }
 
 /* lançamento: um extrato = um lote (a chave vai junto e não se repete) */
@@ -580,13 +659,138 @@ async function desenharHoje() {
   }
 }
 
+/* ============================================================ cadastro de produções (administrador) */
+const chaveProdutos = () => `apont-produtos:${E.api?.empresa || ""}`;
+const numBR = (s) => { const n = parseFloat(String(s ?? "").trim().replace(/\./g, "").replace(",", ".")); return isNaN(n) ? NaN : n; };
+const fmtNum = (n) => Number(n).toLocaleString("pt-BR", { maximumFractionDigits: 4 });
+/** "500 g" -> 0,5 · "1,5 kg" -> 1,5 · "10 × 30 g" -> 0,3 (em kg); null se não tem peso. */
+function pesoDoRotulo(r) {
+  const t = String(r || "").toLowerCase().replace(",", ".");
+  const m = t.match(/(?:(\d+)\s*[x×]\s*)?(\d+(?:\.\d+)?)\s*(kg|g)\b/);
+  if (!m) return null;
+  const v = parseFloat(m[2]) * (m[3] === "g" ? 0.001 : 1) * (m[1] ? parseInt(m[1], 10) : 1);
+  return Math.round(v * 10000) / 10000;
+}
+function lerProdutosGuardados() {
+  try { const g = JSON.parse(localStorage.getItem(chaveProdutos()) || "null"); if (g && g.produtos) { E.produtos = g.produtos; E.produtosEm = g.baixado_em; } } catch (_) { /* sem armazenamento */ }
+}
+function infoLista() {
+  $("cad-lista-info").textContent = E.produtos
+    ? `Lista do Cloudfy: ${E.produtos.length.toLocaleString("pt-BR")} produtos, baixada em ${new Date(E.produtosEm).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}.`
+    : "A lista de produtos do Cloudfy ainda não foi baixada neste aparelho.";
+}
+async function abrirCadastro() {
+  lerProdutosGuardados(); infoLista(); desenharCadastro();
+  $("cad-erro").hidden = true; $("cad-produto").textContent = ""; $("cad-produto").className = "cad-produto";
+  ir("cadastro");
+}
+function desenharCadastro() {
+  const vs = ordenadas();
+  $("dl-grupos").innerHTML = [...new Set(vs.map((v) => v.grupo))].map((g) => `<option value="${esc(g)}"></option>`).join("");
+  $("dl-itens").innerHTML = [...new Set(vs.map((v) => v.item))].map((i) => `<option value="${esc(i)}"></option>`).join("");
+  const grupos = [...new Set(vs.map((v) => v.grupo))];
+  $("cad-lista").innerHTML = grupos.length ? grupos.map((g) => `
+    <div class="cad-grupo"><h2>${esc(g)}</h2>
+      ${vs.filter((v) => v.grupo === g).map((v) => `
+        <div class="cad-linha"><div><b>${esc(v.item)}</b> ${v.rotulo ? `· ${esc(v.rotulo)}` : ""}
+          <small>${esc(v.produto)} ${esc(v.produto_nome || "")} · 1 un = ${fmtNum(v.quantidade)} ${esc((v.unidade || "").toLowerCase())}</small></div>
+          <button class="btn-apagar" type="button" data-apagar="${v.id}">Apagar</button></div>`).join("")}
+    </div>`).join("") : `<p class="vazio">Nenhuma produção cadastrada.</p>`;
+  $("cad-lista").querySelectorAll("[data-apagar]").forEach((b) => b.addEventListener("click", () => pedirApagar(b)));
+}
+function pedirApagar(b) {
+  if (!b.classList.contains("confirmar")) {
+    b.classList.add("confirmar"); b.textContent = "Confirmar";
+    setTimeout(() => { if (b.isConnected) { b.classList.remove("confirmar"); b.textContent = "Apagar"; } }, 4000);
+    return;
+  }
+  b.disabled = true; b.textContent = "Apagando…";
+  E.api.apagarItem(Number(b.dataset.apagar))
+    .then(recarregarItens)
+    .catch((e) => { b.disabled = false; b.textContent = "Apagar"; b.classList.remove("confirmar"); $("cad-erro").textContent = e.message; $("cad-erro").hidden = false; });
+}
+async function recarregarItens() {
+  const j = await E.api.carregar();
+  E.variedades = j.itens.map((v) => ({ ...v, id: Number(v.id) }));
+  const validos = new Set(E.variedades.map((v) => v.id));
+  for (const id of [...E.carrinho.keys()]) if (!validos.has(id)) E.carrinho.delete(id);
+  guardar(); desenharCadastro(); desenharPdv();
+}
+async function baixarProdutos() {
+  const b = $("btn-baixar"); b.disabled = true; b.textContent = "Baixando…";
+  try {
+    const j = await E.api.produtos();
+    E.produtos = j.produtos; E.produtosEm = j.baixado_em;
+    try { localStorage.setItem(chaveProdutos(), JSON.stringify({ produtos: E.produtos, baixado_em: E.produtosEm })); } catch (_) { /* sem armazenamento */ }
+    infoLista(); conferirCodigo();
+  } catch (e) {
+    $("cad-lista-info").textContent = `Não deu para baixar a lista: ${e.message}`;
+  } finally { b.disabled = false; b.textContent = "Baixar lista de produtos"; }
+}
+let tConferir = null, ultimaConferencia = null, qtdAutomatica = true;
+function sugerirQuantidade(unidade) {
+  if (!qtdAutomatica) return;
+  const u = String(unidade || "").toUpperCase();
+  const peso = pesoDoRotulo($("cad-rotulo").value);
+  const q = ["UND", "UN"].includes(u) ? 1 : ["KG", "LT", "L"].includes(u) && peso ? peso : null;
+  if (q) $("cad-qtd").value = fmtNum(q);
+}
+function conferirCodigo() {
+  clearTimeout(tConferir);
+  const cod = $("cad-codigo").value.trim(), alvo = $("cad-produto");
+  ultimaConferencia = null; $("cad-und").textContent = "";
+  if (!cod) { alvo.textContent = ""; alvo.className = "cad-produto"; return; }
+  if (!/^\d+$/.test(cod)) { alvo.textContent = "O código de referência tem só números."; alvo.className = "cad-produto ruim"; return; }
+  if (!E.produtos) { alvo.textContent = "Baixe a lista de produtos para conferir o código na hora."; alvo.className = "cad-produto aviso"; return; }
+  const p = E.produtos.find((x) => x.c === cod);
+  if (!p) { alvo.textContent = `✗ ${cod} não existe na lista do Cloudfy.`; alvo.className = "cad-produto ruim"; return; }
+  alvo.textContent = `✓ ${p.c} ${p.n} (${p.u}) · conferindo a ficha técnica…`; alvo.className = "cad-produto ok";
+  $("cad-und").textContent = `(em ${p.u.toLowerCase()})`;
+  sugerirQuantidade(p.u);
+  tConferir = setTimeout(async () => {
+    try {
+      const f = await E.api.conferirProduto(cod);
+      if ($("cad-codigo").value.trim() !== cod) return;
+      ultimaConferencia = f;
+      if (!f.existe) { alvo.textContent = `✗ ${cod} não existe no Cloudfy.`; alvo.className = "cad-produto ruim"; return; }
+      if (!f.rendimento) { alvo.textContent = `✗ ${f.codigo} ${f.nome} (${f.unidade}) não tem ficha técnica: o lançamento não teria o que baixar.`; alvo.className = "cad-produto ruim"; return; }
+      const porKg = ["UND", "UN"].includes(String(f.unidade).toUpperCase()) && f.kg_por_unidade >= 0.6;
+      alvo.textContent = `✓ ${f.codigo} ${f.nome} (${f.unidade}) · ficha técnica com ${f.insumos.length} insumo${f.insumos.length === 1 ? "" : "s"}` +
+        (porKg ? ` · atenção: 1 un baixaria ${fmtNum(f.kg_por_unidade)} kg (ficha parece ser por kg)` : "");
+      alvo.className = `cad-produto ${porKg ? "aviso" : "ok"}`;
+    } catch (e) { alvo.textContent = `Não deu para conferir a ficha agora: ${e.message}`; alvo.className = "cad-produto aviso"; }
+  }, 450);
+}
+async function salvarCadastro(ev) {
+  ev.preventDefault();
+  const erro = $("cad-erro"); erro.hidden = true;
+  const d = { grupo: $("cad-grupo").value.trim(), item: $("cad-item").value.trim(), rotulo: $("cad-rotulo").value.trim(),
+    produto: $("cad-codigo").value.trim(), quantidade: numBR($("cad-qtd").value) };
+  const falta = !d.grupo ? "o grupo" : !d.item ? "o nome da produção" : !d.produto ? "o código de referência" : !(d.quantidade > 0) ? "quanto 1 unidade vale" : null;
+  if (falta) { erro.textContent = `Falta ${falta}.`; erro.hidden = false; return; }
+  if (E.produtos && !E.produtos.find((x) => x.c === d.produto)) { erro.textContent = `O código ${d.produto} não existe na lista do Cloudfy.`; erro.hidden = false; return; }
+  const b = $("btn-cad-salvar"); b.disabled = true; b.textContent = "Salvando…";
+  try {
+    await E.api.salvarItem(d);
+    await recarregarItens();
+    $("cad-rotulo").value = ""; $("cad-codigo").value = ""; $("cad-qtd").value = ""; qtdAutomatica = true;
+    $("cad-produto").textContent = `Salvo: ${d.item}${d.rotulo ? " · " + d.rotulo : ""}. Já aparece no apontamento.`; $("cad-produto").className = "cad-produto ok";
+  } catch (e) {
+    erro.textContent = e.message; erro.hidden = false;
+  } finally { b.disabled = false; b.textContent = "Salvar produção"; }
+}
+
 /* ============================================================ início */
 async function entrarNoApp() {
   const nome = await E.api.operador();
   if (!nome) { await E.api.sair(); throw new Error("Este login não está liberado para apontar produção."); }
   $("nome-operador").textContent = nome;
   $("quem").hidden = false;
-  E.variedades = (await E.api.variedades()).map((v) => ({ ...v, id: Number(v.id) }));
+  const j = await E.api.carregar();
+  E.variedades = j.itens.map((v) => ({ ...v, id: Number(v.id) }));
+  E.situacao = Number(j.situacao) === 20 ? 20 : 10;
+  E.admin = !!j.admin;
+  $("btn-cad").hidden = !E.admin;
   recuperar();
   desenharPdv();
   ir("pdv");
@@ -603,8 +807,15 @@ $("form-login").addEventListener("submit", async (ev) => {
     $("login-erro").textContent = e.message; $("login-erro").hidden = false;
   } finally { btn.disabled = false; }
 });
-$("btn-sair").addEventListener("click", async () => { await E.api.sair(); $("quem").hidden = true; ir("login"); });
+$("btn-sair").addEventListener("click", async () => { await E.api.sair(); $("quem").hidden = true; $("btn-cad").hidden = true; ir("login"); });
 $("voltar-pdv").addEventListener("click", () => { desenharPdv(); ir("pdv"); });
+$("btn-cad").addEventListener("click", abrirCadastro);
+$("voltar-cad").addEventListener("click", () => { desenharPdv(); ir("pdv"); });
+$("btn-baixar").addEventListener("click", baixarProdutos);
+$("cad-codigo").addEventListener("input", conferirCodigo);
+$("cad-rotulo").addEventListener("input", () => { const p = E.produtos && E.produtos.find((x) => x.c === $("cad-codigo").value.trim()); if (p) sugerirQuantidade(p.u); });
+$("cad-qtd").addEventListener("input", () => { qtdAutomatica = !$("cad-qtd").value.trim(); });
+$("form-cad").addEventListener("submit", salvarCadastro);
 $("data").addEventListener("change", (ev) => { E.data = ev.target.value || hojeISO(); mexeu(); desenharExtrato(); });
 
 (async function iniciar() {

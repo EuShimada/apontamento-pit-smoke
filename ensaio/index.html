@@ -1,0 +1,1406 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Apontamento de produção</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#4A3427">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: PDV de cozinha — faixa marrom no topo, teclado de quadrados (cada toque soma 1),
+   barra do extrato presa embaixo, e o extrato final com cara de cupom para conferir. */
+:root {
+  --creme: #FFF8E7;
+  --papel: #FFFDF7;
+  --cupom: #FFFEF9;
+  --marrom: #4A3427;
+  --tinta: #3A291F;
+  --areia: #B4936C;
+  --areia-escura: #8C6E4D;
+  --areia-clara: #E9DCC6;
+  --laranja: #FF3D00;
+  --laranja-texto: #C42E00;
+  --laranja-suave: #FFE3D6;
+  --sobre-laranja: #FFFFFF;
+  --ok: #2F7A3E;
+  --ok-fundo: #E3F1E4;
+  --alerta: #8A5A00;
+  --alerta-fundo: #FBEFD3;
+  --erro: #B3261E;
+  --erro-fundo: #FBE3E1;
+  --discord: #5865F2;
+  --discord-fundo: #EEF0FE;
+  --sombra: 0 1px 0 rgba(74, 52, 39, .12), 0 6px 18px -10px rgba(74, 52, 39, .35);
+  --fonte: "Nunito", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --raio: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --creme: #1C1511; --papel: #261D17; --cupom: #2C221B; --marrom: #120D0A; --tinta: #F6EBD8;
+    --areia: #C2A27C; --areia-escura: #D8BE9C; --areia-clara: #3A2D24; --laranja: #FF5A26; --laranja-texto: #FF8A5E;
+    --laranja-suave: #4A2414; --sobre-laranja: #1C1511; --ok: #7CC88A; --ok-fundo: #1F3324; --alerta: #E9B758;
+    --alerta-fundo: #3A2E14; --erro: #FF8A80; --erro-fundo: #3D1E1C; --discord: #9AA3FF; --discord-fundo: #23264A;
+    --sombra: 0 1px 0 rgba(0,0,0,.4), 0 8px 20px -12px rgba(0,0,0,.7);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --creme: #1C1511; --papel: #261D17; --cupom: #2C221B; --marrom: #120D0A; --tinta: #F6EBD8;
+  --areia: #C2A27C; --areia-escura: #D8BE9C; --areia-clara: #3A2D24; --laranja: #FF5A26; --laranja-texto: #FF8A5E;
+  --laranja-suave: #4A2414; --sobre-laranja: #1C1511; --ok: #7CC88A; --ok-fundo: #1F3324; --alerta: #E9B758;
+  --alerta-fundo: #3A2E14; --erro: #FF8A80; --erro-fundo: #3D1E1C; --discord: #9AA3FF; --discord-fundo: #23264A;
+  --sombra: 0 1px 0 rgba(0,0,0,.4), 0 8px 20px -12px rgba(0,0,0,.7);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { min-height: 100%; }
+body {
+  margin: 0; background: var(--creme); color: var(--tinta);
+  font: 500 17px/1.45 var(--fonte); -webkit-tap-highlight-color: transparent;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 10; background: var(--marrom);
+}
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; touch-action: manipulation; }
+:focus-visible { outline: 3px solid var(--laranja); outline-offset: 2px; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* faixa do topo */
+.topo { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--marrom); color: #FFF8E7; }
+.topo-dentro {
+  max-width: 620px; margin: 0 auto; display: flex; align-items: center; gap: 12px; padding-block: 12px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.marca { display: grid; min-width: 0; flex: 1; }
+.marca small { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #E7C9A3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.marca strong { font-size: 19px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.quem { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; }
+.quem span { max-width: 9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #F3E4CC; }
+.faixa-demo {
+  background: var(--alerta-fundo); color: var(--alerta); font-size: 14px; font-weight: 700; text-align: center; padding-block: 8px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* telas */
+main {
+  max-width: 620px; margin: 0 auto; padding-block: 16px 150px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.tela { display: grid; gap: 16px; }
+h1 { margin: 0; font-size: 26px; line-height: 1.15; font-weight: 900; text-wrap: balance; }
+h2 { margin: 0; font-size: 13px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; color: var(--areia-escura); }
+.voltar { justify-self: start; border: 0; background: none; padding: 4px 0; color: var(--laranja-texto); font-weight: 800; font-size: 16px; }
+.voltar::before { content: "‹ "; font-size: 20px; }
+.msg { margin: 0; padding: 12px 14px; border-radius: 12px; font-weight: 700; font-size: 15px; }
+.msg.erro { background: var(--erro-fundo); color: var(--erro); }
+.msg.alerta { background: var(--alerta-fundo); color: var(--alerta); }
+
+/* cartões e campos */
+.cartao { background: var(--papel); border-radius: var(--raio); box-shadow: var(--sombra); padding: 20px; display: grid; gap: 14px; }
+label { display: grid; gap: 6px; font-weight: 800; font-size: 15px; }
+input[type="text"], input[type="password"], input[type="date"] {
+  width: 100%; min-height: 56px; border-radius: 12px; border: 2px solid var(--areia-clara);
+  background: var(--creme); padding: 0 14px; font-size: 18px; font-weight: 700;
+}
+input:focus { border-color: var(--laranja); outline: none; }
+
+/* botões principais */
+.btn {
+  min-height: 60px; border-radius: 14px; border: 0; padding: 0 20px; font-size: 19px; font-weight: 900;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+}
+.btn-pri { background: var(--laranja); color: var(--sobre-laranja); }
+.btn-pri:active { transform: translateY(1px); }
+.btn-pri[disabled] { opacity: .45; cursor: default; }
+.btn-sec { background: var(--papel); color: var(--tinta); border: 2px solid var(--areia-clara); }
+.barra {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 4; background: var(--marrom); color: #FFF8E7;
+  padding-top: 10px; padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  box-shadow: 0 -8px 24px -12px rgba(0,0,0,.45);
+}
+.barra-dentro { max-width: 620px; margin: 0 auto; display: flex; gap: 10px; align-items: center; }
+.barra-dentro .btn-pri { flex: 1; }
+.barra-dentro .btn-sec { flex: 0 0 auto; background: transparent; color: #FFF8E7; border-color: rgba(255,248,231,.35); }
+.resumo { display: grid; line-height: 1.1; min-width: 5.5em; }
+.resumo b { font: 600 26px/1 var(--mono); }
+.resumo small { font-size: 13px; font-weight: 800; color: #E7C9A3; }
+
+/* filtros do PDV */
+.filtros { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.filtros::-webkit-scrollbar { display: none; }
+.chip {
+  flex: 0 0 auto; min-height: 44px; border-radius: 999px; border: 2px solid var(--areia-clara);
+  background: var(--papel); font-weight: 900; padding: 0 16px; font-size: 15px;
+}
+.chip[aria-pressed="true"] { border-color: var(--marrom); background: var(--marrom); color: #FFF8E7; }
+
+/* teclado de quadrados */
+.secao { display: grid; gap: 10px; }
+.teclado { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 520px) { .teclado { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.tecla-caixa { position: relative; min-width: 0; }
+.tecla {
+  width: 100%; aspect-ratio: 1 / 1; max-width: 100%; border: 3px solid transparent; border-radius: var(--raio);
+  background: var(--papel); box-shadow: var(--sombra); padding: 10px; text-align: left;
+  display: grid; grid-template-rows: 1fr auto; gap: 4px; transition: transform .08s ease;
+}
+.tecla-nome { font-size: 14px; font-weight: 900; line-height: 1.15; overflow-wrap: anywhere; align-self: start; }
+.tecla-var { font: 600 27px/1.02 var(--mono); letter-spacing: -.02em; color: var(--tinta); overflow-wrap: anywhere; }
+.tecla.tem { border-color: var(--laranja); background: var(--laranja-suave); }
+.tecla.tem .tecla-var { color: var(--laranja-texto); }
+.tecla.bateu { transform: scale(.94); }
+.tecla-qtd {
+  position: absolute; top: -8px; right: -6px; min-width: 34px; height: 34px; padding: 0 8px; border-radius: 999px;
+  background: var(--laranja); color: var(--sobre-laranja); font: 600 17px/34px var(--mono); text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.25); pointer-events: none;
+}
+.tecla-menos {
+  position: absolute; left: -6px; top: -8px; width: 38px; height: 38px; border-radius: 999px; border: 0;
+  background: var(--marrom); color: #FFF8E7; font-size: 26px; font-weight: 900; line-height: 1;
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+}
+.tecla.tem .tecla-nome { padding-left: 26px; padding-right: 20px; }
+@media (max-width: 430px) {
+  .marca small { font-size: 10px; letter-spacing: .08em; }
+  .quem { gap: 6px; }
+  .quem span { max-width: 5.5em; }
+  .btn-cad { padding: 6px 9px; }
+  .quem.com-admin span { display: none; } /* o nome do aparelho segue no extrato */
+}
+
+/* cadastro de produções (só administrador) */
+.btn-cad { border: 1px solid rgba(255, 248, 231, .35); background: transparent; color: #FFF8E7; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 800; }
+.cad-topo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.cad-topo span { font-size: 14px; font-weight: 700; color: var(--areia-escura); min-width: 0; }
+.cad-produto { margin: -6px 0 0; font-size: 14px; font-weight: 700; min-height: 1.4em; }
+.cad-produto.ok { color: var(--ok); }
+.cad-produto.ruim { color: var(--erro); }
+.cad-produto.aviso { color: var(--alerta); }
+.cad-grupo { display: grid; gap: 6px; }
+.cad-linha {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; align-items: center;
+  background: var(--papel); border-radius: 12px; padding: 10px 12px; font-size: 14px;
+}
+.cad-linha b { font-size: 15px; }
+.cad-linha small { display: block; color: var(--areia-escura); font-weight: 700; font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; }
+.btn-apagar { border: 2px solid var(--erro-fundo); background: transparent; color: var(--erro); border-radius: 10px; min-height: 40px; padding: 0 12px; font-weight: 900; font-size: 14px; }
+.btn-apagar.confirmar { background: var(--erro); color: #fff; border-color: var(--erro); }
+
+/* extrato (cupom) */
+.cupom {
+  background: var(--cupom); box-shadow: var(--sombra); border-radius: 6px 6px 0 0; position: relative;
+  padding: 18px 16px 22px; display: grid; gap: 12px;
+}
+.cupom::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -10px; height: 10px;
+  background: linear-gradient(-45deg, transparent 6px, var(--cupom) 0) 0 0 / 14px 10px repeat-x,
+              linear-gradient(45deg, transparent 6px, var(--cupom) 0) 0 0 / 14px 10px repeat-x;
+}
+.cupom-cab { text-align: center; display: grid; gap: 2px; padding-bottom: 12px; border-bottom: 2px dashed var(--areia-clara); }
+.cupom-cab b { font-size: 13px; letter-spacing: .16em; text-transform: uppercase; font-weight: 900; }
+.cupom-cab span { font-size: 14px; font-weight: 700; color: var(--areia-escura); }
+.cupom-linha { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.cupom-nome { font-weight: 800; min-width: 0; overflow-wrap: anywhere; }
+.cupom-nome span { font-family: var(--mono); color: var(--areia-escura); font-weight: 600; margin-left: 4px; }
+.passo { display: grid; grid-template-columns: 44px 52px 44px; align-items: center; }
+.passo button { height: 44px; border: 0; border-radius: 10px; background: var(--areia-clara); font-size: 22px; font-weight: 900; }
+.passo output { text-align: center; font: 600 20px var(--mono); }
+.cupom-total {
+  display: flex; justify-content: space-between; align-items: baseline; padding-top: 12px; border-top: 2px dashed var(--areia-clara);
+  font-weight: 900; letter-spacing: .08em; text-transform: uppercase; font-size: 14px;
+}
+.cupom-total b { font: 600 26px var(--mono); letter-spacing: 0; text-transform: none; }
+.data-linha { display: grid; gap: 8px; margin-top: 8px; }
+.atalhos { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* resultado */
+.selo { display: grid; justify-items: center; gap: 10px; text-align: center; padding-block: 12px 4px; }
+.selo svg { width: 84px; height: 84px; }
+.selo h1 { font-size: 30px; }
+.selo p { margin: 0; font-weight: 700; }
+.discord {
+  background: var(--discord-fundo); border-left: 4px solid var(--discord); border-radius: 10px; padding: 12px 14px;
+  display: grid; gap: 6px; font-size: 15px;
+}
+.discord-cab { font-size: 12px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; color: var(--discord); }
+.discord-texto { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; font: inherit; }
+
+/* lançados hoje */
+.hoje { display: grid; gap: 8px; }
+.hoje-linha {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center;
+  background: var(--papel); border-radius: 12px; padding: 10px 12px; font-size: 15px;
+}
+.hoje-linha .hora { font: 600 14px var(--mono); color: var(--areia-escura); }
+.hoje-linha .o-que { font-weight: 800; min-width: 0; }
+.hoje-linha .o-que small { display: block; font-weight: 700; color: var(--areia-escura); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.estado { font-size: 12px; font-weight: 900; border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
+.estado.enviado { background: var(--ok-fundo); color: var(--ok); }
+.estado.pendente { background: var(--alerta-fundo); color: var(--alerta); }
+.estado.erro { background: var(--erro-fundo); color: var(--erro); }
+.vazio { color: var(--areia-escura); font-weight: 700; font-size: 15px; margin: 0; }
+
+/* acesso do aparelho */
+.acesso-icone { width: 72px; height: 72px; }
+.acesso-dado { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; font-size: 16px; }
+.acesso-dado dt { font-weight: 800; color: var(--areia-escura); }
+.acesso-dado dd { margin: 0; font-weight: 900; overflow-wrap: anywhere; }
+.passos { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; font-weight: 700; }
+
+/* aparelhos (administrador) */
+.opcoes { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; }
+.opcoes legend { font-weight: 800; font-size: 15px; margin-bottom: 6px; padding: 0; }
+.opcao {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px;
+  border: 2px solid var(--areia-clara); border-radius: 12px; padding: 10px 12px; background: var(--creme); font-weight: 700;
+}
+.opcao:has(input:checked) { border-color: var(--laranja); background: var(--laranja-suave); }
+.opcao input { width: 22px; height: 22px; accent-color: var(--laranja); margin: 0; }
+.opcao b { display: block; font-size: 16px; }
+.opcao small { display: block; color: var(--areia-escura); font-size: 13px; }
+.convite { justify-items: center; text-align: center; scroll-margin-top: 96px; }
+.convite h2 { justify-self: stretch; text-align: left; }
+.qr { background: #FFFFFF; border-radius: 12px; padding: 10px; width: min(280px, 100%); line-height: 0; }
+.qr svg { width: 100%; height: auto; display: block; }
+.link-convite { font: 600 12px/1.35 var(--mono); color: var(--areia-escura); overflow-wrap: anywhere; margin: 0; max-width: 100%; }
+.convite-estado { font-weight: 800; margin: 0; }
+.convite-estado.ok { color: var(--ok); }
+.convite-acoes { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.convite-acoes .btn { min-height: 48px; font-size: 16px; }
+.ap-linha {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; align-items: center;
+  background: var(--papel); border-radius: 12px; padding: 10px 12px; font-size: 14px;
+}
+.ap-linha.apagado { opacity: .6; }
+.ap-linha b { font-size: 15px; }
+.ap-linha small { display: block; color: var(--areia-escura); font-weight: 700; font-size: 12px; overflow-wrap: anywhere; }
+.ap-acoes { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.ap-linha.aprovando { grid-template-columns: minmax(0, 1fr); }
+.ap-codigo { display: grid; gap: 8px; width: 100%; }
+.ap-codigo label, .convite label { text-align: left; }
+input.campo-codigo { text-align: center; font: 600 26px var(--mono); letter-spacing: .1em; }
+.ap-msg { margin: 0; font-size: 14px; font-weight: 800; color: var(--erro); }
+.ap-linha small.ap-dica { color: var(--alerta); margin-top: 4px; }
+.estado.dono { background: var(--areia-clara); color: var(--tinta); }
+.codigo-conf { margin: 0; padding: 6px 0; text-align: center; font: 600 46px/1.35 var(--mono); letter-spacing: .06em; color: var(--laranja-texto); }
+.btn-aprovar { border: 0; background: var(--ok); color: #fff; border-radius: 10px; min-height: 40px; padding: 0 12px; font-weight: 900; font-size: 14px; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } .tecla.bateu { transform: none; } }
+@media (max-width: 340px) { .teclado { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="topo-dentro">
+    <div class="marca"><small>Apontamento de produção</small><strong id="nome-empresa">…</strong></div>
+    <div class="quem" id="quem" hidden><span id="nome-operador"></span><button class="btn-cad" id="btn-cad" type="button" hidden>Cadastro</button><button class="btn-cad" id="btn-aparelhos" type="button" hidden>Aparelhos</button></div>
+  </div>
+</header>
+<div class="faixa-demo" id="faixa-demo" hidden>Demonstração com os itens do piloto. Nada é gravado no Cloudfy nem enviado ao Discord.</div>
+
+<main>
+  <!-- 1. acesso do aparelho: sem cadastro, convite, aguardando aprovação, desligado -->
+  <section class="tela" id="t-acesso" hidden><div class="tela" id="acesso"></div></section>
+
+  <!-- 2. PDV: cada toque soma 1 unidade -->
+  <section class="tela" id="t-pdv" hidden>
+    <h1>Toque no que foi produzido</h1>
+    <div class="filtros" id="filtros" role="group" aria-label="Grupos"></div>
+    <div class="tela" id="teclado"></div>
+    <div class="secao">
+      <h2>Lançados hoje</h2>
+      <div class="hoje" id="hoje"></div>
+    </div>
+  </section>
+
+  <!-- 3. extrato para conferir -->
+  <section class="tela" id="t-extrato" hidden>
+    <button class="voltar" type="button" id="voltar-pdv">Continuar somando</button>
+    <h1>Confira o extrato</h1>
+    <div id="cupom"></div>
+    <div class="data-linha">
+      <h2>Data da produção</h2>
+      <div class="atalhos" id="atalhos-data"></div>
+      <input type="date" id="data" aria-label="Data da produção">
+    </div>
+    <p class="msg erro" id="extrato-erro" hidden></p>
+    <p class="msg alerta" id="extrato-fase"></p>
+  </section>
+
+  <!-- 4. resultado -->
+  <section class="tela" id="t-resultado" hidden>
+    <div id="resultado" class="tela"></div>
+  </section>
+
+  <!-- 5. cadastro de produções (só administrador) -->
+  <section class="tela" id="t-cadastro" hidden>
+    <button class="voltar" type="button" id="voltar-cad">Voltar ao apontamento</button>
+    <h1>Cadastro de produções</h1>
+    <div class="cartao cad-topo">
+      <span id="cad-lista-info">A lista de produtos do Cloudfy ainda não foi baixada neste aparelho.</span>
+      <button class="btn btn-sec" id="btn-baixar" type="button">Baixar lista de produtos</button>
+    </div>
+    <form class="cartao" id="form-cad" novalidate>
+      <h2>Nova produção</h2>
+      <label for="cad-grupo">Grupo<input type="text" id="cad-grupo" list="dl-grupos" autocomplete="off" placeholder="Ex.: Molhos"></label>
+      <label for="cad-item">Produção<input type="text" id="cad-item" list="dl-itens" autocomplete="off" placeholder="Ex.: Maionese de Alho"></label>
+      <label for="cad-rotulo">Porção (o que aparece grande no quadrado)<input type="text" id="cad-rotulo" autocomplete="off" placeholder="Ex.: 500 g · vazio se não tiver"></label>
+      <label for="cad-codigo">Código de referência no Cloudfy<input type="text" id="cad-codigo" inputmode="numeric" autocomplete="off" placeholder="Ex.: 10217"></label>
+      <p class="cad-produto" id="cad-produto" aria-live="polite"></p>
+      <label for="cad-qtd">Quanto 1 unidade vale no Cloudfy <span id="cad-und"></span><input type="text" id="cad-qtd" inputmode="decimal" autocomplete="off" placeholder="Ex.: 1 (porção) ou 0,5 (kg)"></label>
+      <p class="msg erro" id="cad-erro" hidden></p>
+      <button class="btn btn-pri" type="submit" id="btn-cad-salvar">Salvar produção</button>
+    </form>
+    <div class="secao"><h2>Produções no app</h2><div class="tela" id="cad-lista"></div></div>
+    <datalist id="dl-grupos"></datalist><datalist id="dl-itens"></datalist>
+  </section>
+
+  <!-- 6. aparelhos (só administrador): convite por QR ou link, aprovar e desligar -->
+  <section class="tela" id="t-aparelhos" hidden>
+    <button class="voltar" type="button" id="voltar-ap">Voltar ao apontamento</button>
+    <h1>Aparelhos</h1>
+    <form class="cartao" id="form-convite" novalidate>
+      <h2>Novo aparelho</h2>
+      <label for="cv-nome">Nome do aparelho<input type="text" id="cv-nome" maxlength="40" autocomplete="off" placeholder="Ex.: Celular cozinha 1"></label>
+      <p class="vazio">O aparelho novo vai só lançar a produção. Administrador novo é cadastrado pelo Mac, não por aqui.</p>
+      <fieldset class="opcoes"><legend>Como cadastrar</legend>
+        <label class="opcao"><input type="radio" name="cv-modo" value="local" checked><span><b>Aqui, com QR</b><small>o convite vale 15 minutos</small></span></label>
+        <label class="opcao"><input type="radio" name="cv-modo" value="remoto"><span><b>À distância, por link</b><small>o convite vale 24 horas</small></span></label>
+      </fieldset>
+      <p class="vazio">Nos dois casos o aparelho novo mostra um código de 6 números, e você só aprova digitando esse código aqui.</p>
+      <p class="msg erro" id="cv-erro" hidden></p>
+      <button class="btn btn-pri" type="submit" id="btn-convite">Gerar convite</button>
+    </form>
+    <div class="cartao convite" id="convite-ativo" hidden></div>
+    <p class="msg alerta" id="ap-aviso" hidden></p>
+    <div class="secao"><h2>Aparelhos cadastrados</h2><div class="tela" id="lista-aparelhos"></div></div>
+    <div class="secao" id="secao-convites" hidden><h2>Convites em aberto</h2><div class="tela" id="lista-convites"></div></div>
+    <p class="msg erro" id="ap-erro" hidden></p>
+  </section>
+</main>
+
+<div class="barra" id="barra" hidden><div class="barra-dentro" id="barra-dentro"></div></div>
+
+<script>window.APP_CONFIG = window.APP_CONFIG || null;</script>
+<script src="config.js" onerror="void 0"></script>
+<script>
+"use strict";
+/* ============================================================ utilidades */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const hojeISO = (desloc = 0) => {
+  const d = new Date(); d.setDate(d.getDate() + desloc);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+const fmtData = (iso) => iso.split("-").reverse().join("/");
+const nomeDaLinha = (l) => (l.rotulo ? `${l.item} ${l.rotulo}` : l.item);
+const novaChave = () => (crypto.randomUUID ? crypto.randomUUID()
+  : "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) => (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)));
+function carregarScript(src) {
+  return new Promise((ok, falha) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = () => falha(new Error("sem conexão para carregar o app")); document.head.appendChild(s); });
+}
+/* mesmo texto de mensagemDiscord() em supabase/functions/apontar-producao/montagem.ts */
+function mensagemDiscord(d) {
+  const linhas = [`**Produção da cozinha lançada**${d.empresa ? ` · ${d.empresa}` : ""}`,
+    `Lote **${d.lote}** no Cloudfy · produção de ${d.data} · por ${d.operador}`,
+    ...d.linhas.map((l) => `• ${nomeDaLinha(l)} — **${l.unidades} un**`), `Total: **${d.totalUnidades} un**`];
+  if (d.situacao !== 20) linhas.push("Aguardando aprovação no Cloudfy (fase de teste)");
+  return linhas.join("\n");
+}
+const discordParaHtml = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+
+/* ============================================================ chave do aparelho (IndexedDB)
+   Sem usuário e senha (24/11/2026): no cadastro o navegador cria um par de chaves ECDSA P-256
+   com a privada NÃO exportável e guarda o par aqui. Nem este código consegue ler a privada:
+   só pede ao navegador para assinar. O servidor guarda a pública e confere cada pedido. */
+const Chaveiro = {
+  abrir() {
+    return new Promise((ok, falha) => {
+      if (!window.indexedDB) { falha(new Error("sem IndexedDB")); return; }
+      const r = indexedDB.open("apont-aparelho", 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("cadastro");
+      r.onsuccess = () => ok(r.result);
+      r.onerror = () => falha(r.error || new Error("IndexedDB recusou"));
+    });
+  },
+  async fazer(modo, f) {
+    const db = await this.abrir();
+    return new Promise((ok, falha) => {
+      const t = db.transaction("cadastro", modo), pedido = f(t.objectStore("cadastro"));
+      t.oncomplete = () => ok(pedido.result ?? null);
+      t.onerror = t.onabort = () => falha(t.error || new Error("IndexedDB recusou"));
+    });
+  },
+  ler(k) { return this.fazer("readonly", (s) => s.get(k)); },
+  gravar(k, v) { return this.fazer("readwrite", (s) => s.put(v, k)); },
+  apagar(k) { return this.fazer("readwrite", (s) => s.delete(k)); },
+};
+const b64url = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const SEM_ACESSO = ["nao_cadastrado", "desligado", "assinatura"];
+
+/** "Android SM-A155M · Chrome": só para o administrador reconhecer o aparelho na lista. */
+async function descreverAparelho() {
+  const ua = navigator.userAgent;
+  let modelo = "";
+  try {
+    if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+      const h = await navigator.userAgentData.getHighEntropyValues(["model", "platform"]);
+      modelo = [h.platform, h.model].filter(Boolean).join(" ");
+    }
+  } catch (_) { /* navegador não informa */ }
+  if (!modelo) modelo = /Android/.test(ua) ? "Android" : /iPhone|iPad/.test(ua) ? "iPhone/iPad" : /Windows/.test(ua) ? "Windows" : /Mac OS X/.test(ua) ? "Mac" : "aparelho";
+  const nav = /Edg\//.test(ua) ? "Edge" : /SamsungBrowser/.test(ua) ? "Samsung Internet" : /CriOS|Chrome\//.test(ua) ? "Chrome"
+    : /Firefox|FxiOS/.test(ua) ? "Firefox" : /Safari/.test(ua) ? "Safari" : "navegador";
+  return `${modelo} · ${nav}`.slice(0, 80);
+}
+
+/* ============================================================ dados: pela função do servidor (real)
+   O celular NÃO tem chave do Supabase: cadastro, itens, lista de hoje e lançamento passam pela
+   função apontar-producao, que guarda as chaves no servidor. Cada pedido vai assinado. */
+const sha256hex = async (t) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t)))]
+  .map((b) => b.toString(16).padStart(2, "0")).join("");
+/* O código de conferência (os 6 números que o administrador digita para aprovar) NÃO é calculado
+   aqui: o servidor sorteia um "sal" no cadastro e manda o código só para este aparelho, em pedido
+   assinado ("cadastrar" e "eu"). Assim ninguém consegue fabricar uma chave com o código que quiser. */
+async function apiReal(cfg) {
+  // Onde o cadastro fica guardado neste navegador: sob o "id" da empresa, que é fixo (vem do config.js).
+  // Mudar o nome que aparece na tela ou o endereço da função não faz os aparelhos perderem o cadastro.
+  const K = `aparelho:${cfg.id || cfg.empresa || ""}`;
+  let cad = null; // { id, nome, papel, par, pub }
+  try { const g = await Chaveiro.ler(K); if (g && g.id && g.par) cad = g; } catch (_) { cad = null; }
+  // "desvio" = hora do servidor − hora do aparelho; aprendido quando o servidor reclama do momento
+  let ultimo = 0, desvio = 0, fila = Promise.resolve();
+  const assinarTexto = async (chave, texto) =>
+    b64url(new Uint8Array(await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, chave, new TextEncoder().encode(texto))));
+
+  async function enviar(corpo, assinar) {
+    const texto = JSON.stringify(corpo);
+    const headers = { "Content-Type": "application/json" };
+    if (assinar) {
+      if (!cad) { const e = new Error("Este aparelho não está cadastrado. Peça ao administrador um QR de cadastro."); e.codigo = "nao_cadastrado"; throw e; }
+      const momento = Math.max(Date.now() + desvio, ultimo + 1); ultimo = momento;
+      headers["X-Aparelho"] = cad.id; headers["X-Momento"] = String(momento);
+      headers["X-Assinatura"] = await assinarTexto(cad.par.privateKey, `apont-v1\n${cad.id}\n${momento}\n${texto}`);
+    }
+    let r;
+    try {
+      r = await fetch(cfg.funcaoUrl, { method: "POST", headers, body: texto });
+    } catch (_) {
+      throw new Error("Sem internet. Confira o Wi-Fi e tente de novo.");
+    }
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) { const e = new Error(j.erro || `O servidor respondeu ${r.status}. Tente de novo.`); e.codigo = j.codigo || ""; e.dados = j; throw e; }
+    return j;
+  }
+  /** Um pedido por vez (o servidor só aceita momento mais novo). Se o servidor reclamar do momento
+      (relógio do aparelho errado, ou adiantado e depois acertado), o app se acerta pela hora do
+      servidor e tenta mais uma vez: ninguém precisa mexer no relógio. */
+  function chamar(corpo, assinar = true) {
+    const p = fila.then(async () => {
+      try { return await enviar(corpo, assinar); }
+      catch (e) {
+        if (!assinar || e.codigo !== "momento" || !e.dados || !Number.isFinite(e.dados.agora)) throw e;
+        desvio = e.dados.agora - Date.now();
+        ultimo = Math.max(ultimo, Number(e.dados.ultimo_momento) || 0);
+        return await enviar(corpo, assinar);
+      }
+    });
+    fila = p.catch(() => {});
+    return p.catch((e) => {
+      if (assinar && SEM_ACESSO.includes(e.codigo)) window.dispatchEvent(new CustomEvent("apont-sem-acesso", { detail: e }));
+      throw e;
+    });
+  }
+  return {
+    demo: false, empresa: cfg.empresa || "", diasRetro: Number(cfg.diasRetro ?? 7),
+    cadastrado() { return !!cad; },
+    aparelho() { return cad ? { id: cad.id, nome: cad.nome, papel: cad.papel } : null; },
+    async verConvite(convite) { return await chamar({ acao: "ver_convite", convite }, false); },
+    /** A chave é criada e GUARDADA antes de gastar o convite. Se a resposta se perder, a nova tentativa
+        manda a mesma chave e o servidor devolve o mesmo cadastro: o convite não queima e não sobra
+        aparelho-fantasma. Junto vai a "prova": uma assinatura que mostra que a chave é mesmo deste aparelho. */
+    async cadastrar(convite) {
+      const KP = `${K}|pendente`, marca = await sha256hex(convite);
+      let pend = null;
+      try { pend = await Chaveiro.ler(KP); } catch (_) { pend = null; }
+      if (!pend || pend.convite !== marca || !pend.par || !pend.pub) {
+        const par = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, false, ["sign", "verify"]);
+        const j = await crypto.subtle.exportKey("jwk", par.publicKey);
+        pend = { convite: marca, par, pub: { kty: j.kty, crv: j.crv, x: j.x, y: j.y } };
+        try { await Chaveiro.gravar(KP, pend); }
+        catch (_) { throw new Error("Este navegador não deixa guardar o cadastro (aba anônima ou dados bloqueados). Abra no navegador normal do aparelho."); }
+      }
+      const prova = await assinarTexto(pend.par.privateKey, `apont-cadastro-v1\n${convite}\n${pend.pub.x}\n${pend.pub.y}`);
+      const r = await chamar({ acao: "cadastrar", convite, chave_publica: pend.pub, prova, modelo: await descreverAparelho() }, false);
+      cad = { id: r.aparelho.id, nome: r.aparelho.nome, papel: r.aparelho.papel, par: pend.par, pub: pend.pub };
+      ultimo = 0;
+      await Chaveiro.gravar(K, cad);
+      try { await Chaveiro.apagar(KP); } catch (_) { /* fica para a próxima */ }
+      try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (_) { /* o navegador decide */ }
+      return r.aparelho;
+    },
+    async esquecer() { cad = null; try { await Chaveiro.apagar(K); } catch (_) { /* já não estava */ } },
+    async eu() { return await chamar({ acao: "eu" }); },
+    /** Quadrados + situação de lançamento + se o aparelho é administrador. */
+    async carregar() { return await chamar({ acao: "itens" }); },
+    async hoje() { return (await chamar({ acao: "hoje" })).lancamentos; },
+    async lancar(corpo) { return await chamar(corpo); },
+    // tela Cadastro (a função recusa quem não é administrador)
+    async produtos() { return await chamar({ acao: "produtos" }); },
+    async conferirProduto(produto) { return await chamar({ acao: "conferir_produto", produto }); },
+    async salvarItem(dados) { return await chamar({ acao: "salvar_item", ...dados }); },
+    async apagarItem(id) { return await chamar({ acao: "apagar_item", id }); },
+    // tela Aparelhos (idem)
+    async aparelhos() { return await chamar({ acao: "aparelhos" }); },
+    async novoConvite(d) { return await chamar({ acao: "novo_convite", ...d }); },
+    async aprovarAparelho(id, codigo) { return await chamar({ acao: "aprovar_aparelho", id, codigo }); },
+    async desligarAparelho(id) { return await chamar({ acao: "desligar_aparelho", id }); },
+    async cancelarConvite(id) { return await chamar({ acao: "cancelar_convite", id }); },
+  };
+}
+
+/* ============================================================ dados: demonstração */
+function apiDemo(D) {
+  const SIT = 20; // a demonstração mostra o app aprovando o lote direto (situação 20)
+  const lancados = [];
+  let lote = 40;
+  const espera = (ms) => new Promise((r) => setTimeout(r, ms));
+  const eu = { id: "demo-0", nome: "Celular do Shimada", papel: "admin", status: "ativo", protegido: true };
+  const aps = [
+    { ...eu, modelo: "Android · Chrome", criado_em: new Date(Date.now() - 864e5).toISOString(), ultimo_uso: new Date().toISOString(),
+      cadastrado_por: "Mac", aprovado_por: "Mac" },
+    { id: "demo-1", nome: "Celular cozinha 1", papel: "lancar", status: "ativo", modelo: "Android SM-A155M · Chrome", protegido: false,
+      criado_em: new Date(Date.now() - 36e5).toISOString(), ultimo_uso: new Date(Date.now() - 6e5).toISOString(),
+      cadastrado_por: eu.nome, aprovado_por: eu.nome },
+  ];
+  const convites = [];
+  return {
+    demo: true, empresa: D.empresa, diasRetro: 7,
+    cadastrado() { return true; },
+    aparelho() { return eu; },
+    async eu() { return eu; },
+    async esquecer() {},
+    async carregar() { return { itens: D.variedades.filter((v) => v.ativo !== false), situacao: SIT, admin: true, aparelho: eu }; },
+    async aparelhos() {
+      await espera(250);
+      // na demonstração, o convite é "lido" 8 segundos depois de gerado
+      for (let i = convites.length - 1; i >= 0; i--) {
+        const c = convites[i];
+        if (Date.now() - c.t0 < 8000) continue;
+        convites.splice(i, 1);
+        aps.push({ id: `demo-${aps.length}`, nome: c.nome, papel: c.papel, status: "aguardando", protegido: false,
+          modelo: "Android · Chrome", criado_em: new Date().toISOString(), convite_id: c.id, cadastrado_por: eu.nome, aprovado_por: null });
+      }
+      return { aparelhos: aps.slice().reverse(), convites: convites.map(({ t0, ...c }) => c), eu: eu.id, eu_protegido: true };
+    },
+    async novoConvite(d) {
+      await espera(300);
+      const c = { id: `cv-${Date.now()}`, codigo: "DEMOdemoDEMOdemoDEMO12", nome: d.nome, papel: "lancar", remoto: !!d.remoto, t0: Date.now(),
+        expira_em: new Date(Date.now() + (d.remoto ? 864e5 : 9e5)).toISOString(), criado_em: new Date().toISOString() };
+      convites.push(c);
+      const { t0, ...publico } = c; return publico;
+    },
+    async aprovarAparelho(id, codigo) { // na demonstração, qualquer código de 6 números serve
+      if (String(codigo || "").replace(/\D/g, "").length !== 6) throw new Error("Digite os 6 números que aparecem no aparelho novo.");
+      const a = aps.find((x) => x.id === id); if (a) { a.status = "ativo"; a.aprovado_por = eu.nome; } return { ok: true };
+    },
+    async desligarAparelho(id) {
+      const a = aps.find((x) => x.id === id); if (a) { a.status = "desligado"; a.desligado_em = new Date().toISOString(); }
+      return { ok: true, convites_cancelados: 0, suspensos: [], aprovados_antes: [] };
+    },
+    async cancelarConvite(id) { const i = convites.findIndex((c) => c.id === id); if (i >= 0) convites.splice(i, 1); return { ok: true }; },
+    async hoje() { return lancados.slice().reverse(); },
+    async lancar(corpo) {
+      await espera(900);
+      const ja = lancados.find((l) => l.chave === corpo.chave);
+      if (ja) return { ok: true, repetido: true, lote: ja.cloudfy_lote, situacao: SIT, discord: "enviado" };
+      const linhas = corpo.itens.map((x) => ({ ...D.variedades.find((v) => v.id === x.variedade_id), unidades: x.unidades }));
+      const total = linhas.reduce((a, l) => a + l.unidades, 0);
+      lote += 1;
+      lancados.push({ chave: corpo.chave, criado_em: new Date().toISOString(), itens: linhas, total_unidades: total, status: "enviado", situacao: SIT, cloudfy_lote: String(lote), operador_nome: D.operador, discord_status: "enviado" });
+      return { ok: true, lote: String(lote), situacao: SIT, total_unidades: total, discord: "enviado" };
+    },
+    async produtos() { await espera(600); return { produtos: D.produtos || [], baixado_em: new Date().toISOString() }; },
+    async conferirProduto(produto) {
+      await espera(400);
+      const p = (D.produtos || []).find((x) => x.c === produto);
+      if (!p) return { existe: false, codigo: produto };
+      const f = D.fichas[produto];
+      const insumos = f ? f.componentes.map((c) => ({ codigo: c.codigo, nome: c.nome, quantidade: c.quantidade, unidade: c.unidade })) : [];
+      return { existe: true, codigo: produto, nome: p.n, unidade: p.u, rendimento: f ? f.rendimento : (D.com_ficha || []).includes(produto) ? 1 : 0, insumos, kg_por_unidade: 0 };
+    },
+    async salvarItem(d) {
+      await espera(500);
+      const p = (D.produtos || []).find((x) => x.c === d.produto);
+      if (!p) throw new Error(`o código ${d.produto} não existe no Cloudfy`);
+      const v = D.variedades.find((x) => x.item === d.item && x.rotulo === d.rotulo);
+      const novo = { grupo: d.grupo, item: d.item, rotulo: d.rotulo, produto: d.produto, produto_nome: p.n, unidade: p.u, quantidade: Number(d.quantidade), ativo: true,
+        grupo_ordem: 99, item_ordem: 99, ordem: 99 };
+      if (v) Object.assign(v, novo); else D.variedades.push({ ...novo, id: Math.max(0, ...D.variedades.map((x) => x.id)) + 1 });
+      return { ok: true };
+    },
+    async apagarItem(id) { await espera(300); const v = D.variedades.find((x) => x.id === id); if (v) v.ativo = false; return { ok: true }; },
+  };
+}
+
+/* ============================================================ estado */
+const E = { api: null, variedades: [], filtro: "Todos", carrinho: new Map(), data: hojeISO(), chave: null, enviando: false, ultimo: null,
+  situacao: 10, admin: false, produtos: null, produtosEm: null };
+const TELAS = ["acesso", "pdv", "extrato", "resultado", "cadastro", "aparelhos"];
+const chaveLocal = () => `apont-extrato:${E.api?.empresa || ""}`;
+
+function guardar() {
+  try { localStorage.setItem(chaveLocal(), JSON.stringify({ itens: [...E.carrinho], data: E.data, dia: hojeISO() })); } catch (_) { /* sem armazenamento */ }
+}
+function recuperar() {
+  try {
+    const g = JSON.parse(localStorage.getItem(chaveLocal()) || "null");
+    if (!g || g.dia !== hojeISO()) return;
+    const validos = new Set(E.variedades.map((v) => v.id));
+    E.carrinho = new Map(g.itens.filter(([id, n]) => validos.has(id) && n > 0));
+    E.data = /^\d{4}-\d{2}-\d{2}$/.test(g.data || "") ? g.data : hojeISO();
+  } catch (_) { /* sem armazenamento */ }
+}
+function mexeu() { E.chave = null; guardar(); }
+const totalUnidades = () => [...E.carrinho.values()].reduce((a, n) => a + n, 0);
+const ordenadas = () => E.variedades.slice().sort((a, b) =>
+  a.grupo_ordem - b.grupo_ordem || a.item_ordem - b.item_ordem || a.ordem - b.ordem || a.item.localeCompare(b.item, "pt-BR"));
+const linhasDoExtrato = () => ordenadas().filter((v) => E.carrinho.get(v.id) > 0).map((v) => ({ ...v, unidades: E.carrinho.get(v.id) }));
+
+function ir(tela) {
+  for (const t of TELAS) $(`t-${t}`).hidden = t !== tela;
+  if (E.tela === "aparelhos" && tela !== "aparelhos") pararVigia();
+  E.tela = tela;
+  barra();
+  window.scrollTo(0, 0);
+  if (tela === "pdv") desenharHoje();
+}
+
+/* ============================================================ barra de baixo */
+function barra() {
+  const b = $("barra-dentro");
+  const total = totalUnidades(), nLinhas = E.carrinho.size;
+  if (E.tela === "pdv") {
+    b.innerHTML = `<div class="resumo"><b>${total} un</b><small>${nLinhas ? `${nLinhas} ${nLinhas === 1 ? "item" : "itens"}` : "nada somado"}</small></div>
+      <button class="btn btn-pri" id="btn-extrato" type="button" ${total ? "" : "disabled"}>Enviar</button>`;
+    $("btn-extrato").addEventListener("click", abrirExtrato);
+  } else if (E.tela === "extrato") {
+    b.innerHTML = `<div class="resumo"><b>${total} un</b><small>no extrato</small></div>
+      <button class="btn btn-pri" id="btn-lancar" type="button" ${total && !E.enviando ? "" : "disabled"}>${E.enviando ? "Lançando…" : "Lançar no Cloudfy"}</button>`;
+    $("btn-lancar").addEventListener("click", lancar);
+  } else if (E.tela === "resultado" && E.ultimo) {
+    b.innerHTML = E.ultimo.ok
+      ? `<button class="btn btn-pri" type="button" id="btn-novo">Novo apontamento</button>`
+      : `<button class="btn btn-sec" type="button" id="btn-ver-extrato">Extrato</button><button class="btn btn-pri" type="button" id="btn-repetir">Tentar de novo</button>`;
+    $("btn-novo")?.addEventListener("click", () => { desenharPdv(); ir("pdv"); });
+    $("btn-ver-extrato")?.addEventListener("click", abrirExtrato);
+    $("btn-repetir")?.addEventListener("click", () => { ir("extrato"); desenharExtrato(); lancar(); });
+  } else { b.innerHTML = ""; }
+  $("barra").hidden = !b.innerHTML;
+}
+
+/* ============================================================ PDV */
+function desenharPdv() {
+  const grupos = [...new Set(ordenadas().map((v) => v.grupo))];
+  if (!grupos.includes(E.filtro)) E.filtro = "Todos";
+  $("filtros").innerHTML = ["Todos", ...grupos].map((g) => `<button class="chip" type="button" data-g="${esc(g)}" aria-pressed="${E.filtro === g}">${esc(g)}</button>`).join("");
+  $("filtros").querySelectorAll("[data-g]").forEach((b) => b.addEventListener("click", () => { E.filtro = b.dataset.g; desenharPdv(); }));
+  if (!E.variedades.length) { $("teclado").innerHTML = `<p class="msg alerta">Nenhum item liberado para apontar. Fale com o responsável.</p>`; return; }
+  const mostrar = grupos.filter((g) => E.filtro === "Todos" || g === E.filtro);
+  $("teclado").innerHTML = mostrar.map((g) => `
+    <div class="secao"><h2>${esc(g)}</h2><div class="teclado">
+      ${ordenadas().filter((v) => v.grupo === g).map((v) => `
+        <div class="tecla-caixa" id="caixa-${v.id}">${tecla(v)}</div>`).join("")}
+    </div></div>`).join("");
+  $("teclado").querySelectorAll(".tecla-caixa").forEach(ligarTecla);
+}
+
+function tecla(v) {
+  const n = E.carrinho.get(v.id) || 0;
+  return `<button class="tecla${n ? " tem" : ""}" type="button" data-mais="${v.id}" aria-label="${esc(nomeDaLinha(v))}: ${n} no extrato. Toque para somar 1.">
+      <span class="tecla-nome">${esc(v.item)}</span><span class="tecla-var">${esc(v.rotulo || "un")}</span></button>
+    ${n ? `<span class="tecla-qtd">${n}</span><button class="tecla-menos" type="button" data-menos="${v.id}" aria-label="Tirar 1 de ${esc(nomeDaLinha(v))}">−</button>` : ""}`;
+}
+
+function ligarTecla(caixa) {
+  caixa.querySelector("[data-mais]").addEventListener("click", (ev) => somar(Number(ev.currentTarget.dataset.mais), 1));
+  caixa.querySelector("[data-menos]")?.addEventListener("click", (ev) => somar(Number(ev.currentTarget.dataset.menos), -1));
+}
+
+function somar(id, d) {
+  const n = Math.max(0, Math.min(999, (E.carrinho.get(id) || 0) + d));
+  if (n) E.carrinho.set(id, n); else E.carrinho.delete(id);
+  mexeu();
+  const caixa = $(`caixa-${id}`);
+  if (caixa) {
+    caixa.innerHTML = tecla(E.variedades.find((v) => v.id === id));
+    ligarTecla(caixa);
+    if (d > 0) { const t = caixa.querySelector(".tecla"); t.classList.add("bateu"); setTimeout(() => t.classList.remove("bateu"), 90); }
+    if (navigator.vibrate) { try { navigator.vibrate(12); } catch (_) { /* sem vibração */ } }
+  }
+  if (E.tela === "extrato") desenharExtrato();
+  barra();
+}
+
+/* ============================================================ extrato */
+function abrirExtrato() {
+  $("extrato-erro").hidden = true;
+  desenharExtrato();
+  ir("extrato");
+}
+
+function desenharExtrato() {
+  const linhas = linhasDoExtrato();
+  const total = totalUnidades();
+  $("cupom").innerHTML = `
+    <div class="cupom">
+      <div class="cupom-cab"><b>Extrato de produção</b><span>${esc(E.api.empresa)} · ${esc($("nome-operador").textContent)}</span><span class="num">${esc(fmtData(E.data))}</span></div>
+      ${linhas.length ? linhas.map((l) => `
+        <div class="cupom-linha">
+          <div class="cupom-nome">${esc(l.item)}${l.rotulo ? `<span>${esc(l.rotulo)}</span>` : ""}</div>
+          <div class="passo"><button type="button" data-ext="${l.id}" data-d="-1" aria-label="Tirar 1">−</button><output class="num">${l.unidades}</output><button type="button" data-ext="${l.id}" data-d="1" aria-label="Somar 1">+</button></div>
+        </div>`).join("") : `<p class="vazio">O extrato está vazio. Volte e toque nos itens.</p>`}
+      <div class="cupom-total"><span>Total</span><b>${total} un</b></div>
+    </div>`;
+  $("cupom").querySelectorAll("[data-ext]").forEach((b) => b.addEventListener("click", () => somar(Number(b.dataset.ext), Number(b.dataset.d))));
+  const opc = [["Hoje", hojeISO()], ["Ontem", hojeISO(-1)]];
+  $("atalhos-data").innerHTML = opc.map(([r, iso]) => `<button class="chip" type="button" data-dt="${iso}" aria-pressed="${E.data === iso}">${r}</button>`).join("");
+  $("atalhos-data").querySelectorAll("[data-dt]").forEach((b) => b.addEventListener("click", () => { E.data = b.dataset.dt; mexeu(); desenharExtrato(); }));
+  const d = $("data"); d.min = hojeISO(-E.api.diasRetro); d.max = hojeISO(); d.value = E.data;
+  $("extrato-fase").textContent = E.situacao === 20
+    ? "Ao lançar, o lote já sai aprovado: a produção entra no estoque e os insumos saem na hora."
+    : "Fase de teste: o lote fica salvo no Cloudfy aguardando aprovação; o estoque só muda quando alguém aprovar lá.";
+}
+
+/* lançamento: um extrato = um lote (a chave vai junto e não se repete) */
+async function lancar() {
+  if (E.enviando || !totalUnidades()) return;
+  if (E.data > hojeISO() || E.data < hojeISO(-E.api.diasRetro)) {
+    $("extrato-erro").textContent = `A data precisa estar entre ${fmtData(hojeISO(-E.api.diasRetro))} e hoje.`;
+    $("extrato-erro").hidden = false; return;
+  }
+  if (!E.chave) E.chave = novaChave();
+  E.enviando = true; barra();
+  const linhas = linhasDoExtrato();
+  const corpo = { acao: "apontar", data: E.data, chave: E.chave, itens: linhas.map((l) => ({ variedade_id: l.id, unidades: l.unidades })) };
+  try {
+    const r = await E.api.lancar(corpo);
+    E.ultimo = { ok: true, r, linhas, data: E.data, total: totalUnidades() };
+    E.carrinho = new Map(); E.chave = null; E.data = hojeISO(); guardar();
+  } catch (e) {
+    E.ultimo = { ok: false, erro: e.message };
+  } finally {
+    E.enviando = false;
+  }
+  desenharResultado();
+}
+
+function desenharResultado() {
+  const u = E.ultimo;
+  const icone = u.ok
+    ? `<svg viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="40" fill="var(--ok-fundo)"/><path d="M25 43l11 11 23-25" fill="none" stroke="var(--ok)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+    : `<svg viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="40" fill="var(--erro-fundo)"/><path d="M42 22v26M42 60v2" fill="none" stroke="var(--erro)" stroke-width="7" stroke-linecap="round"/></svg>`;
+  if (!u.ok) {
+    $("resultado").innerHTML = `<div class="selo">${icone}<h1>Não foi lançado</h1><p class="msg erro">${esc(u.erro)}</p><p>O extrato continua guardado.</p></div>`;
+  } else {
+    const r = u.r;
+    const texto = mensagemDiscord({ empresa: E.api.empresa, lote: r.lote, situacao: r.situacao, data: fmtData(u.data), operador: $("nome-operador").textContent, linhas: u.linhas, totalUnidades: u.total });
+    const disc = r.discord === "enviado" ? (E.api.demo ? "Mensagem que vai para o Discord da empresa" : "Avisado no Discord da empresa")
+      : r.discord === "erro" ? "Lançado, mas o aviso no Discord falhou" : "Discord ainda não ligado para esta empresa";
+    $("resultado").innerHTML = `
+      <div class="selo">${icone}<h1>${r.situacao === 20 ? "Produção lançada" : "Lote salvo no Cloudfy"}</h1>
+        <p><b class="num">${u.total} un</b> · lote nº <b class="num">${esc(r.lote)}</b> · ${esc(fmtData(u.data))}${r.repetido ? " · já tinha sido lançado" : ""}</p></div>
+      ${r.situacao === 20 ? "" : `<p class="msg alerta">Aguardando aprovação no Cloudfy (fase de teste).</p>`}
+      <div class="discord"><div class="discord-cab">${disc}</div>${r.discord === "enviado" ? `<pre class="discord-texto">${discordParaHtml(texto)}</pre>` : ""}</div>`;
+  }
+  ir("resultado");
+}
+
+/* ============================================================ lançados hoje */
+async function desenharHoje() {
+  const alvo = $("hoje");
+  try {
+    const ls = await E.api.hoje();
+    if (!ls.length) { alvo.innerHTML = `<p class="vazio">Nada lançado hoje ainda.</p>`; return; }
+    alvo.innerHTML = ls.map((l) => {
+      const hora = new Date(l.criado_em).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+      const est = l.status === "erro" ? ["erro", "não lançou"]
+        : l.status === "enviando" ? ["pendente", "enviando"]
+        : l.situacao === 20 ? ["enviado", `lote ${l.cloudfy_lote}`] : ["pendente", `lote ${l.cloudfy_lote} · aprovar`];
+      const itens = (l.itens || []).map((x) => `${nomeDaLinha(x)} ×${x.unidades}`).join(", ");
+      return `<div class="hoje-linha"><span class="hora">${hora}</span><span class="o-que">${l.total_unidades} un · ${esc(l.operador_nome)}<small>${esc(itens)}</small></span><span class="estado ${est[0]}">${esc(est[1])}</span></div>`;
+    }).join("");
+  } catch (e) {
+    alvo.innerHTML = `<p class="vazio">Não deu para ler a lista de hoje (${esc(e.message)}).</p>`;
+  }
+}
+
+/* ============================================================ cadastro de produções (administrador) */
+const chaveProdutos = () => `apont-produtos:${E.api?.empresa || ""}`;
+const numBR = (s) => { const n = parseFloat(String(s ?? "").trim().replace(/\./g, "").replace(",", ".")); return isNaN(n) ? NaN : n; };
+const fmtNum = (n) => Number(n).toLocaleString("pt-BR", { maximumFractionDigits: 4 });
+/** "500 g" -> 0,5 · "1,5 kg" -> 1,5 · "10 × 30 g" -> 0,3 (em kg); null se não tem peso. */
+function pesoDoRotulo(r) {
+  const t = String(r || "").toLowerCase().replace(",", ".");
+  const m = t.match(/(?:(\d+)\s*[x×]\s*)?(\d+(?:\.\d+)?)\s*(kg|g)\b/);
+  if (!m) return null;
+  const v = parseFloat(m[2]) * (m[3] === "g" ? 0.001 : 1) * (m[1] ? parseInt(m[1], 10) : 1);
+  return Math.round(v * 10000) / 10000;
+}
+function lerProdutosGuardados() {
+  try { const g = JSON.parse(localStorage.getItem(chaveProdutos()) || "null"); if (g && g.produtos) { E.produtos = g.produtos; E.produtosEm = g.baixado_em; } } catch (_) { /* sem armazenamento */ }
+}
+function infoLista() {
+  $("cad-lista-info").textContent = E.produtos
+    ? `Lista do Cloudfy: ${E.produtos.length.toLocaleString("pt-BR")} produtos, baixada em ${new Date(E.produtosEm).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}.`
+    : "A lista de produtos do Cloudfy ainda não foi baixada neste aparelho.";
+}
+async function abrirCadastro() {
+  lerProdutosGuardados(); infoLista(); desenharCadastro();
+  $("cad-erro").hidden = true; $("cad-produto").textContent = ""; $("cad-produto").className = "cad-produto";
+  ir("cadastro");
+}
+function desenharCadastro() {
+  const vs = ordenadas();
+  $("dl-grupos").innerHTML = [...new Set(vs.map((v) => v.grupo))].map((g) => `<option value="${esc(g)}"></option>`).join("");
+  $("dl-itens").innerHTML = [...new Set(vs.map((v) => v.item))].map((i) => `<option value="${esc(i)}"></option>`).join("");
+  const grupos = [...new Set(vs.map((v) => v.grupo))];
+  $("cad-lista").innerHTML = grupos.length ? grupos.map((g) => `
+    <div class="cad-grupo"><h2>${esc(g)}</h2>
+      ${vs.filter((v) => v.grupo === g).map((v) => `
+        <div class="cad-linha"><div><b>${esc(v.item)}</b> ${v.rotulo ? `· ${esc(v.rotulo)}` : ""}
+          <small>${esc(v.produto)} ${esc(v.produto_nome || "")} · 1 un = ${fmtNum(v.quantidade)} ${esc((v.unidade || "").toLowerCase())}</small></div>
+          <button class="btn-apagar" type="button" data-apagar="${v.id}">Apagar</button></div>`).join("")}
+    </div>`).join("") : `<p class="vazio">Nenhuma produção cadastrada.</p>`;
+  $("cad-lista").querySelectorAll("[data-apagar]").forEach((b) => b.addEventListener("click", () => pedirApagar(b)));
+}
+function pedirApagar(b) {
+  if (!b.classList.contains("confirmar")) {
+    b.classList.add("confirmar"); b.textContent = "Confirmar";
+    setTimeout(() => { if (b.isConnected) { b.classList.remove("confirmar"); b.textContent = "Apagar"; } }, 4000);
+    return;
+  }
+  b.disabled = true; b.textContent = "Apagando…";
+  E.api.apagarItem(Number(b.dataset.apagar))
+    .then(recarregarItens)
+    .catch((e) => { b.disabled = false; b.textContent = "Apagar"; b.classList.remove("confirmar"); $("cad-erro").textContent = e.message; $("cad-erro").hidden = false; });
+}
+async function recarregarItens() {
+  const j = await E.api.carregar();
+  E.variedades = j.itens.map((v) => ({ ...v, id: Number(v.id) }));
+  const validos = new Set(E.variedades.map((v) => v.id));
+  for (const id of [...E.carrinho.keys()]) if (!validos.has(id)) E.carrinho.delete(id);
+  guardar(); desenharCadastro(); desenharPdv();
+}
+async function baixarProdutos() {
+  const b = $("btn-baixar"); b.disabled = true; b.textContent = "Baixando…";
+  try {
+    const j = await E.api.produtos();
+    E.produtos = j.produtos; E.produtosEm = j.baixado_em;
+    try { localStorage.setItem(chaveProdutos(), JSON.stringify({ produtos: E.produtos, baixado_em: E.produtosEm })); } catch (_) { /* sem armazenamento */ }
+    infoLista(); conferirCodigo();
+  } catch (e) {
+    $("cad-lista-info").textContent = `Não deu para baixar a lista: ${e.message}`;
+  } finally { b.disabled = false; b.textContent = "Baixar lista de produtos"; }
+}
+let tConferir = null, ultimaConferencia = null, qtdAutomatica = true;
+function sugerirQuantidade(unidade) {
+  if (!qtdAutomatica) return;
+  const u = String(unidade || "").toUpperCase();
+  const peso = pesoDoRotulo($("cad-rotulo").value);
+  const q = ["UND", "UN"].includes(u) ? 1 : ["KG", "LT", "L"].includes(u) && peso ? peso : null;
+  if (q) $("cad-qtd").value = fmtNum(q);
+}
+function conferirCodigo() {
+  clearTimeout(tConferir);
+  const cod = $("cad-codigo").value.trim(), alvo = $("cad-produto");
+  ultimaConferencia = null; $("cad-und").textContent = "";
+  if (!cod) { alvo.textContent = ""; alvo.className = "cad-produto"; return; }
+  if (!/^\d+$/.test(cod)) { alvo.textContent = "O código de referência tem só números."; alvo.className = "cad-produto ruim"; return; }
+  if (!E.produtos) { alvo.textContent = "Baixe a lista de produtos para conferir o código na hora."; alvo.className = "cad-produto aviso"; return; }
+  const p = E.produtos.find((x) => x.c === cod);
+  if (!p) { alvo.textContent = `✗ ${cod} não existe na lista do Cloudfy.`; alvo.className = "cad-produto ruim"; return; }
+  alvo.textContent = `✓ ${p.c} ${p.n} (${p.u}) · conferindo a ficha técnica…`; alvo.className = "cad-produto ok";
+  $("cad-und").textContent = `(em ${p.u.toLowerCase()})`;
+  sugerirQuantidade(p.u);
+  tConferir = setTimeout(async () => {
+    try {
+      const f = await E.api.conferirProduto(cod);
+      if ($("cad-codigo").value.trim() !== cod) return;
+      ultimaConferencia = f;
+      if (!f.existe) { alvo.textContent = `✗ ${cod} não existe no Cloudfy.`; alvo.className = "cad-produto ruim"; return; }
+      if (!f.rendimento) { alvo.textContent = `✗ ${f.codigo} ${f.nome} (${f.unidade}) não tem ficha técnica: o lançamento não teria o que baixar.`; alvo.className = "cad-produto ruim"; return; }
+      // Ficha provisória do Cloudfy (1 un de 999999 "SEM FICHA"): permitida (Shimada, 24/11/2026); só informa.
+      const provisoria = f.insumos.some((i) => i.codigo === "999999" || String(i.nome).toUpperCase() === "SEM FICHA");
+      if (provisoria) {
+        alvo.textContent = `✓ ${f.codigo} ${f.nome} (${f.unidade}) · ficha provisória "SEM FICHA": lança normalmente; ` +
+          "os insumos de verdade entram quando a ficha real for feita no Cloudfy.";
+        alvo.className = "cad-produto ok"; return;
+      }
+      const porKg = ["UND", "UN"].includes(String(f.unidade).toUpperCase()) && f.kg_por_unidade >= 0.6;
+      alvo.textContent = `✓ ${f.codigo} ${f.nome} (${f.unidade}) · ficha técnica com ${f.insumos.length} insumo${f.insumos.length === 1 ? "" : "s"}` +
+        (porKg ? ` · atenção: 1 un baixaria ${fmtNum(f.kg_por_unidade)} kg (ficha parece ser por kg)` : "");
+      alvo.className = `cad-produto ${porKg ? "aviso" : "ok"}`;
+    } catch (e) { alvo.textContent = `Não deu para conferir a ficha agora: ${e.message}`; alvo.className = "cad-produto aviso"; }
+  }, 450);
+}
+async function salvarCadastro(ev) {
+  ev.preventDefault();
+  const erro = $("cad-erro"); erro.hidden = true;
+  const d = { grupo: $("cad-grupo").value.trim(), item: $("cad-item").value.trim(), rotulo: $("cad-rotulo").value.trim(),
+    produto: $("cad-codigo").value.trim(), quantidade: numBR($("cad-qtd").value) };
+  const falta = !d.grupo ? "o grupo" : !d.item ? "o nome da produção" : !d.produto ? "o código de referência" : !(d.quantidade > 0) ? "quanto 1 unidade vale" : null;
+  if (falta) { erro.textContent = `Falta ${falta}.`; erro.hidden = false; return; }
+  if (E.produtos && !E.produtos.find((x) => x.c === d.produto)) { erro.textContent = `O código ${d.produto} não existe na lista do Cloudfy.`; erro.hidden = false; return; }
+  const b = $("btn-cad-salvar"); b.disabled = true; b.textContent = "Salvando…";
+  try {
+    await E.api.salvarItem(d);
+    await recarregarItens();
+    $("cad-rotulo").value = ""; $("cad-codigo").value = ""; $("cad-qtd").value = ""; qtdAutomatica = true;
+    $("cad-produto").textContent = `Salvo: ${d.item}${d.rotulo ? " · " + d.rotulo : ""}. Já aparece no apontamento.`; $("cad-produto").className = "cad-produto ok";
+  } catch (e) {
+    erro.textContent = e.message; erro.hidden = false;
+  } finally { b.disabled = false; b.textContent = "Salvar produção"; }
+}
+
+/* ============================================================ aparelhos (administrador) */
+const PAPEL = { lancar: "Lança a produção", admin: "Administrador" };
+const quando = (iso) => (iso ? new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "");
+const hora = (iso) => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+const soDigitos = (v) => String(v ?? "").replace(/\D/g, "").slice(0, 6);
+const comEspaco = (c) => (c.length > 3 ? `${c.slice(0, 3)} ${c.slice(3)}` : c);
+let vigia = null, conviteAtivo = null, qrPronto = null, ultimaLista = "", ultimoJ = null;
+/* Enquanto o administrador está no meio de um toque (digitando o código de um aparelho ou
+   confirmando um desligamento), a lista não é redesenhada: nada muda de lugar debaixo do dedo. */
+const apUi = { aprovando: null, confirmando: null, ate: 0 };
+const ocupado = () => !!(apUi.aprovando || apUi.confirmando) && Date.now() < apUi.ate;
+const ocupar = () => { apUi.ate = Date.now() + 60000; };
+const desocupar = () => { apUi.aprovando = null; apUi.confirmando = null; apUi.ate = 0; };
+function pararVigia() { clearInterval(vigia); vigia = null; }
+const linkDoConvite = (codigo) => `${location.origin}${location.pathname}#convite=${codigo}`;
+function carregarQr() { return (qrPronto ||= window.qrcode ? Promise.resolve() : carregarScript("qrcode.js")); }
+function avisoAparelhos(texto) { const a = $("ap-aviso"); a.textContent = texto || ""; a.hidden = !texto; }
+const redesenhar = () => { if (ultimoJ) desenharAparelhos(ultimoJ); };
+
+async function abrirAparelhos() {
+  $("ap-erro").hidden = true; $("cv-erro").hidden = true; avisoAparelhos(""); desocupar();
+  ir("aparelhos");
+  await atualizarAparelhos(true);
+  pararVigia();
+  vigia = setInterval(() => { if (!document.hidden) atualizarAparelhos(); }, 4000);
+}
+async function atualizarAparelhos(forcar = false) {
+  if (!forcar && ocupado()) return;
+  try {
+    const j = await E.api.aparelhos();
+    if (!forcar && ocupado()) return; // começou um toque enquanto a lista vinha
+    if (!ocupado()) desocupar();       // toque abandonado há mais de 1 minuto
+    // "usado em" muda a cada consulta: fica fora da comparação, para a lista não piscar à toa
+    const marca = JSON.stringify(j, (k, v) => (k === "ultimo_uso" ? undefined : v));
+    ultimoJ = j;
+    if (forcar || marca !== ultimaLista) { ultimaLista = marca; desenharAparelhos(j); }
+    conferirConvite(j);
+    $("ap-erro").hidden = true;
+  } catch (e) { $("ap-erro").textContent = `Não deu para ler os aparelhos: ${e.message}`; $("ap-erro").hidden = false; }
+}
+function desenharAparelhos(j) {
+  const ordem = { aguardando: 0, ativo: 1, desligado: 2 };
+  const aps = j.aparelhos.slice().sort((a, b) => ordem[a.status] - ordem[b.status]);
+  const botaoDesligar = (a, rotulo) => (apUi.confirmando === a.id
+    ? `<button class="btn-apagar confirmar" type="button" data-desligar="${esc(a.id)}">Confirmar</button>`
+    : `<button class="btn-apagar" type="button" data-desligar="${esc(a.id)}">${rotulo}</button>`);
+  $("lista-aparelhos").innerHTML = aps.length ? aps.map((a) => {
+    const eu = a.id === j.eu, aprovando = apUi.aprovando === a.id;
+    const est = a.status === "ativo" ? ["enviado", "ativo"] : a.status === "aguardando" ? ["pendente", "aguardando aprovação"] : ["erro", "desligado"];
+    const uso = a.status === "desligado" ? `desligado em ${quando(a.desligado_em)}` : a.ultimo_uso ? `usado em ${quando(a.ultimo_uso)}` : `cadastrado em ${quando(a.criado_em)}`;
+    const origem = a.status === "desligado" || !a.cadastrado_por ? ""
+      : ` · cadastrado por ${a.cadastrado_por}${a.aprovado_por ? `, aprovado por ${a.aprovado_por}` : ""}`;
+    let acoes = "";
+    const podeAprovar = a.status === "aguardando" && a.papel !== "admin" && !a.vencido;
+    if (!eu && a.status === "aguardando") {
+      // o código NÃO vem na lista: o administrador digita o que lê na tela do aparelho novo
+      acoes = aprovando && podeAprovar
+        ? `<div class="ap-codigo"><label>Código que aparece no aparelho novo
+             <input type="text" class="campo-codigo" inputmode="numeric" autocomplete="off" maxlength="7" placeholder="000 000" data-codigo="${esc(a.id)}"></label>
+             <p class="ap-msg" data-msg hidden></p>
+             <div class="ap-acoes"><button class="btn-aprovar" type="button" data-confirmar="${esc(a.id)}">Aprovar</button><button class="btn-apagar" type="button" data-voltar>Voltar</button></div></div>`
+        : `${podeAprovar ? `<button class="btn-aprovar" type="button" data-aprovar="${esc(a.id)}">Aprovar</button>` : ""}${botaoDesligar(a, "Recusar")}`;
+    } else if (!eu && a.status === "ativo" && (!a.protegido || j.eu_protegido)) {
+      acoes = botaoDesligar(a, "Desligar");
+    }
+    const dica = a.status !== "aguardando" ? ""
+      : a.vencido ? `<small class="ap-dica">Pedido vencido (mais de 48 horas sem aprovação): recuse e gere um convite novo.</small>`
+      : a.papel === "admin" ? `<small class="ap-dica">Administrador novo é aprovado pelo Mac, não por aqui.</small>` : "";
+    return `<div class="ap-linha${a.status === "desligado" ? " apagado" : ""}${aprovando ? " aprovando" : ""}"><div><b>${esc(a.nome)}</b>${eu ? " · este aparelho" : ""}
+        <small>${esc(PAPEL[a.papel] || a.papel)} · ${esc(a.modelo || "aparelho")} · ${esc(uso)}${esc(origem)}</small>
+        <span class="estado ${est[0]}">${est[1]}</span>${a.protegido ? ` <span class="estado dono">do dono</span>` : ""}${dica}</div><div class="ap-acoes">${acoes}</div></div>`;
+  }).join("") : `<p class="vazio">Nenhum aparelho cadastrado.</p>`;
+  const lista = $("lista-aparelhos");
+  lista.querySelectorAll("[data-aprovar]").forEach((b) => b.addEventListener("click", () => {
+    apUi.aprovando = b.dataset.aprovar; apUi.confirmando = null; ocupar(); redesenhar();
+    $("lista-aparelhos").querySelector("[data-codigo]")?.focus();
+  }));
+  lista.querySelectorAll("[data-codigo]").forEach((c) => {
+    c.addEventListener("input", () => { c.value = comEspaco(soDigitos(c.value)); ocupar(); const m = lista.querySelector("[data-msg]"); if (m) m.hidden = true; });
+    c.addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); aprovarNaLista(c.dataset.codigo); } });
+  });
+  lista.querySelectorAll("[data-confirmar]").forEach((b) => b.addEventListener("click", () => aprovarNaLista(b.dataset.confirmar)));
+  lista.querySelectorAll("[data-voltar]").forEach((b) => b.addEventListener("click", () => { desocupar(); redesenhar(); }));
+  lista.querySelectorAll("[data-desligar]").forEach((b) => b.addEventListener("click", () => desligarNaLista(b.dataset.desligar)));
+  $("secao-convites").hidden = !j.convites.length;
+  $("lista-convites").innerHTML = j.convites.map((c) => `<div class="ap-linha"><div><b>${esc(c.nome)}</b>
+      <small>${esc(PAPEL[c.papel] || c.papel)} · ${c.remoto ? "link" : "QR"} · vale até ${esc(quando(c.expira_em))}</small></div>
+      <div class="ap-acoes"><button class="btn-apagar" type="button" data-cancelar="${esc(c.id)}">Cancelar</button></div></div>`).join("");
+  $("lista-convites").querySelectorAll("[data-cancelar]").forEach((b) => b.addEventListener("click", async () => {
+    b.disabled = true;
+    try { await E.api.cancelarConvite(b.dataset.cancelar); } catch (e) { $("ap-erro").textContent = e.message; $("ap-erro").hidden = false; }
+    atualizarAparelhos(true);
+  }));
+}
+async function aprovarNaLista(id) {
+  const lista = $("lista-aparelhos"), campo = lista.querySelector("[data-codigo]"), msg = lista.querySelector("[data-msg]"), b = lista.querySelector("[data-confirmar]");
+  const dizer = (t) => { if (msg) { msg.textContent = t; msg.hidden = false; } };
+  const codigo = soDigitos(campo ? campo.value : "");
+  if (codigo.length !== 6) { dizer("Digite os 6 números que aparecem no aparelho novo."); campo?.focus(); return; }
+  if (b) { b.disabled = true; b.textContent = "Aprovando…"; }
+  ocupar();
+  try {
+    await E.api.aprovarAparelho(id, codigo);
+    desocupar(); avisoAparelhos("");
+    await atualizarAparelhos(true);
+  } catch (e) {
+    if (b) { b.disabled = false; b.textContent = "Aprovar"; }
+    dizer(e.message); ocupar();
+  }
+}
+async function desligarNaLista(id) {
+  if (apUi.confirmando !== id) { // 1º toque: pede a confirmação (a lista fica parada até o 2º toque)
+    apUi.confirmando = id; apUi.aprovando = null; ocupar(); redesenhar();
+    setTimeout(() => { if (apUi.confirmando === id) { desocupar(); redesenhar(); } }, 6000);
+    return;
+  }
+  desocupar();
+  $("lista-aparelhos").querySelectorAll("button").forEach((b) => { b.disabled = true; });
+  try {
+    const r = await E.api.desligarAparelho(id);
+    const partes = [];
+    if (r.convites_cancelados) partes.push(r.convites_cancelados === 1 ? "1 convite dele foi cancelado" : `${r.convites_cancelados} convites dele foram cancelados`);
+    if (r.suspensos && r.suspensos.length) {
+      partes.push(`voltaram a aguardar aprovação, porque ele tinha aprovado nas últimas 24 horas: ${r.suspensos.map((s) => s.nome).join(", ")}. ` +
+        "Se forem seus, aprove de novo digitando o código que aparece em cada um");
+    }
+    if (r.aprovados_antes && r.aprovados_antes.length) {
+      partes.push(`continuam ativos, aprovados por ele há mais de 24 horas: ${r.aprovados_antes.map((s) => s.nome).join(", ")}. Confira se você reconhece todos`);
+    }
+    avisoAparelhos(partes.length ? `Desligado. Além disso, ${partes.join("; e ")}.` : "");
+  } catch (e) { $("ap-erro").textContent = e.message; $("ap-erro").hidden = false; }
+  await atualizarAparelhos(true);
+}
+async function gerarConvite(ev) {
+  ev.preventDefault();
+  const erro = $("cv-erro"); erro.hidden = true;
+  const nome = $("cv-nome").value.trim();
+  if (nome.length < 2) { erro.textContent = "Dê um nome ao aparelho (ex.: Celular cozinha 1)."; erro.hidden = false; return; }
+  const remoto = document.querySelector('input[name="cv-modo"]:checked').value === "remoto";
+  const b = $("btn-convite"); b.disabled = true; b.textContent = "Gerando…";
+  try {
+    const c = await E.api.novoConvite({ nome, remoto });
+    await mostrarConvite(c);
+    $("cv-nome").value = "";
+    await atualizarAparelhos(true);
+  } catch (e) { erro.textContent = e.message; erro.hidden = false; }
+  finally { b.disabled = false; b.textContent = "Gerar convite"; }
+}
+async function mostrarConvite(c) {
+  conviteAtivo = { ...c, fase: "esperar" };
+  const link = linkDoConvite(c.codigo);
+  const caixa = $("convite-ativo");
+  let qr = "", comLink = !!c.remoto;
+  if (!c.remoto) {
+    try { await carregarQr(); const q = window.qrcode(0, "M"); q.addData(link); q.make(); qr = `<div class="qr">${q.createSvgTag({ cellSize: 6, margin: 2, scalable: true })}</div>`; }
+    catch (_) { qr = `<p class="msg alerta">Não deu para desenhar o QR. Use o link abaixo.</p>`; comLink = true; }
+  }
+  caixa.innerHTML = `
+    <h2>${c.remoto ? "Mande este link" : "Aponte a câmera do aparelho novo"}</h2>
+    ${qr}
+    <p><b>${esc(c.nome)}</b> · ${esc(PAPEL[c.papel] || c.papel)}<br>
+      O convite vale até ${esc(c.remoto ? quando(c.expira_em) : hora(c.expira_em))}, uma vez só.
+      Depois, o aparelho novo mostra um código de 6 números e você aprova digitando esse código aqui.</p>
+    ${comLink ? `<p class="link-convite">${esc(link)}</p>` : ""}
+    <div class="convite-acoes">
+      ${comLink && navigator.share ? `<button class="btn btn-pri" type="button" id="cv-compartilhar">Compartilhar</button>` : ""}
+      ${comLink ? `<button class="btn btn-sec" type="button" id="cv-copiar">Copiar link</button>` : ""}
+      <button class="btn btn-sec" type="button" id="cv-cancelar">Cancelar convite</button>
+    </div>
+    <p class="convite-estado" id="cv-estado" aria-live="polite">${c.remoto ? "Esperando abrirem o link…" : "Esperando a leitura do QR…"}</p>`;
+  caixa.hidden = false;
+  $("cv-copiar")?.addEventListener("click", async (ev) => {
+    try { await navigator.clipboard.writeText(link); ev.target.textContent = "Copiado"; } catch (_) { ev.target.textContent = "Copie o link acima"; }
+  });
+  $("cv-compartilhar")?.addEventListener("click", () => navigator.share({ title: "Cadastro no apontamento de produção", text: `Cadastro do aparelho "${c.nome}" no apontamento de produção:`, url: link }).catch(() => {}));
+  $("cv-cancelar").addEventListener("click", async () => {
+    try { await E.api.cancelarConvite(c.id); } catch (_) { /* já usado ou vencido */ }
+    caixa.hidden = true; conviteAtivo = null; atualizarAparelhos(true);
+  });
+  caixa.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+function fecharConvite(texto, ok = false) {
+  conviteAtivo = null;
+  $("convite-ativo").innerHTML = `<p class="convite-estado${ok ? " ok" : ""}" id="cv-estado">${esc(texto)}</p>`;
+}
+/* O convite que está na tela: alguém já usou? Então o código é pedido ali mesmo. */
+function conferirConvite(j) {
+  if (!conviteAtivo) return;
+  const usado = j.aparelhos.find((a) => a.convite_id === conviteAtivo.id);
+  if (usado && usado.status === "aguardando") {
+    if (conviteAtivo.fase === "aprovar") return; // já está pedindo o código: não mexe enquanto ele digita
+    conviteAtivo.fase = "aprovar";
+    $("convite-ativo").innerHTML = `
+      <h2>Falta aprovar</h2>
+      <p><b>${esc(usado.nome)}</b> (${esc(usado.modelo || "aparelho")}) usou o convite e está aguardando.</p>
+      <label for="cv-codigo">Digite o código de 6 números que aparece na tela dele
+        <input type="text" class="campo-codigo" id="cv-codigo" inputmode="numeric" autocomplete="off" maxlength="7" placeholder="000 000"></label>
+      <p class="ap-msg" id="cv-msg" hidden></p>
+      <div class="convite-acoes"><button class="btn btn-pri" type="button" id="cv-aprovar">Aprovar</button>
+        <button class="btn btn-sec" type="button" id="cv-recusar">Recusar</button></div>
+      <p class="vazio">Se o aparelho que você tem em mãos não mostra um código, ou mostra outro, recuse: outra pessoa usou o convite.</p>`;
+    const campo = $("cv-codigo");
+    campo.addEventListener("input", () => { campo.value = comEspaco(soDigitos(campo.value)); $("cv-msg").hidden = true; });
+    campo.addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); aprovarNoConvite(usado); } });
+    $("cv-aprovar").addEventListener("click", () => aprovarNoConvite(usado));
+    $("cv-recusar").addEventListener("click", async () => {
+      try { await E.api.desligarAparelho(usado.id); } catch (_) { /* já recusado */ }
+      fecharConvite(`${usado.nome} foi recusado.`); atualizarAparelhos(true);
+    });
+    campo.focus();
+  } else if (usado && usado.status === "ativo") {
+    fecharConvite(`✓ ${usado.nome} aprovado e cadastrado.`, true);
+  } else if (usado) {
+    fecharConvite(`${usado.nome} foi recusado.`);
+  } else if (!j.convites.some((c) => c.id === conviteAtivo.id)) {
+    fecharConvite("Este convite venceu ou foi cancelado. Gere outro se precisar.");
+  }
+}
+async function aprovarNoConvite(ap) {
+  const campo = $("cv-codigo"), msg = $("cv-msg"), b = $("cv-aprovar");
+  const codigo = soDigitos(campo.value);
+  if (codigo.length !== 6) { msg.textContent = "Digite os 6 números que aparecem no aparelho novo."; msg.hidden = false; campo.focus(); return; }
+  b.disabled = true; b.textContent = "Aprovando…";
+  try {
+    await E.api.aprovarAparelho(ap.id, codigo);
+    fecharConvite(`✓ ${ap.nome} aprovado e cadastrado.`, true);
+    atualizarAparelhos(true);
+  } catch (e) { b.disabled = false; b.textContent = "Aprovar"; msg.textContent = e.message; msg.hidden = false; }
+}
+
+/* ============================================================ acesso do aparelho */
+const icone = (tipo) => tipo === "ok"
+  ? `<svg class="acesso-icone" viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="40" fill="var(--ok-fundo)"/><path d="M25 43l11 11 23-25" fill="none" stroke="var(--ok)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+  : tipo === "espera"
+  ? `<svg class="acesso-icone" viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="40" fill="var(--alerta-fundo)"/><path d="M42 22v21l13 8" fill="none" stroke="var(--alerta)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+  : `<svg class="acesso-icone" viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="40" fill="var(--laranja-suave)"/><rect x="28" y="16" width="28" height="52" rx="6" fill="none" stroke="var(--laranja-texto)" stroke-width="5"/><path d="M38 60h8" stroke="var(--laranja-texto)" stroke-width="5" stroke-linecap="round"/></svg>`;
+let esperaAprovacao = null;
+function mostrarAcesso(html) {
+  clearInterval(esperaAprovacao); esperaAprovacao = null;
+  $("quem").hidden = true;
+  $("acesso").innerHTML = html;
+  ir("acesso");
+}
+function telaSemCadastro(aviso) {
+  mostrarAcesso(`${icone()}<h1>Este aparelho ainda não está cadastrado</h1>
+    ${aviso ? `<p class="msg alerta">${esc(aviso)}</p>` : ""}
+    <div class="cartao"><ol class="passos"><li>Peça ao administrador um QR de cadastro.</li>
+      <li>Abra a câmera deste aparelho e aponte para o QR.</li><li>O app abre aqui e pede para confirmar.</li></ol></div>
+    <form class="cartao" id="form-colar" novalidate>
+      <label for="colar">Recebeu um link de convite? Cole aqui
+        <input type="text" id="colar" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="https://…#convite=…"></label>
+      <p class="msg erro" id="colar-erro" hidden></p>
+      <button class="btn btn-sec" type="submit">Usar este convite</button>
+      <p class="vazio">O cadastro vale só para este navegador. Abra o app sempre pelo mesmo.</p>
+    </form>`);
+  $("form-colar").addEventListener("submit", (ev) => {
+    ev.preventDefault();
+    const m = $("colar").value.trim().match(/(?:convite=|^)([A-Za-z0-9_-]{22})$/);
+    if (!m) { $("colar-erro").textContent = "Não achei o convite nesse texto. Cole o link inteiro, até o fim."; $("colar-erro").hidden = false; return; }
+    fluxoConvite(m[1]);
+  });
+}
+function telaSemAcesso(msg) {
+  mostrarAcesso(`${icone()}<h1>Este aparelho está sem acesso</h1><p class="msg erro">${esc(msg)}</p>
+    <div class="cartao"><p class="vazio">Peça um QR novo ao administrador. Para cadastrar de novo, apague o cadastro antigo deste aparelho.</p>
+      <button class="btn btn-sec" type="button" id="btn-esquecer">Apagar o cadastro</button></div>`);
+  $("btn-esquecer").addEventListener("click", async () => { await E.api.esquecer(); telaSemCadastro(); });
+}
+/* Todo aparelho novo para aqui: mostra o código que o administrador tem de digitar para aprovar.
+   "ap" é o que o servidor devolveu em "cadastrar" ou "eu": nome, conferencia (o código) e vencido. */
+function telaAguardando(ap) {
+  if (ap.vencido) {
+    mostrarAcesso(`${icone()}<h1>O pedido de cadastro venceu</h1>
+      <div class="cartao"><p>Passaram mais de 48 horas sem aprovação. Peça um convite novo ao administrador.</p>
+        <button class="btn btn-sec" type="button" id="btn-esquecer">Apagar o cadastro</button></div>`);
+    $("btn-esquecer").addEventListener("click", async () => { await E.api.esquecer(); telaSemCadastro(); });
+    return;
+  }
+  mostrarAcesso(`${icone("espera")}<h1>Falta o administrador aprovar</h1>
+    <div class="cartao"><p>Código deste aparelho (<b>${esc(ap.nome)}</b>):</p>
+      <p class="codigo-conf" id="codigo-conf">${esc(comEspaco(String(ap.conferencia || "")))}</p>
+      <p>Mostre ou dite estes 6 números ao administrador. Ele aprova digitando o código no aparelho dele.</p>
+      <p class="vazio">Esta tela confere sozinha a cada 5 segundos e abre o app assim que for aprovado.</p>
+      <button class="btn btn-pri" type="button" id="btn-verificar">Verificar agora</button></div>`);
+  $("btn-verificar").addEventListener("click", () => abrirComCadastro());
+  esperaAprovacao = setInterval(() => { if (!document.hidden) abrirComCadastro(true); }, 5000);
+}
+function telaErro(msg) {
+  mostrarAcesso(`${icone()}<h1>Não deu para abrir</h1><p class="msg erro">${esc(msg)}</p>
+    <button class="btn btn-pri" type="button" id="btn-tentar">Tentar de novo</button>`);
+  $("btn-tentar").addEventListener("click", () => abrirComCadastro());
+}
+async function fluxoConvite(codigo) {
+  let info;
+  try { info = await E.api.verConvite(codigo); }
+  catch (e) {
+    // link velho num aparelho já cadastrado: segue para o app
+    if (E.api.cadastrado() && e.codigo === "convite") { await abrirComCadastro(); return; }
+    telaSemCadastro(e.message); return;
+  }
+  // aparelho com cadastro funcionando (ou que não deu para conferir agora): não cadastra de novo sem querer
+  if (E.api.cadastrado()) {
+    let vivo = null;
+    try { vivo = await E.api.eu(); }
+    catch (e) { vivo = SEM_ACESSO.includes(e.codigo) ? null : { ...E.api.aparelho(), status: "" }; }
+    if (vivo) { telaJaCadastrado(codigo, info, vivo); return; }
+  }
+  telaConvite(codigo, info);
+}
+function telaJaCadastrado(codigo, info, vivo) {
+  mostrarAcesso(`${icone("ok")}<h1>Este aparelho já está cadastrado</h1>
+    <div class="cartao"><p>Ele já entra no app como <b>${esc(vivo.nome)}</b>${vivo.status === "aguardando" ? " (falta só o administrador aprovar)" : ""}. Não precisa cadastrar de novo.</p>
+      <button class="btn btn-pri" type="button" id="btn-abrir">Abrir o app</button>
+      ${vivo.papel === "admin"
+        ? `<p class="msg alerta">Este é um aparelho de ADMINISTRADOR, e por isso um convite não troca o cadastro dele. Para trocar de verdade, desligue este aparelho antes, por outro aparelho do dono ou pelo Mac.</p>`
+        : `<button class="btn btn-sec" type="button" id="btn-recadastrar">Cadastrar de novo</button>
+      <p class="msg alerta" id="recadastrar-aviso" hidden>O cadastro atual deixa de valer neste aparelho: o administrador vai ter de aprovar o novo (${esc(info.nome)}) e desligar o antigo. Toque de novo em "Cadastrar de novo" para confirmar.</p>`}</div>`);
+  $("btn-abrir").addEventListener("click", () => abrirComCadastro());
+  $("btn-recadastrar")?.addEventListener("click", () => {
+    if ($("recadastrar-aviso").hidden) { $("recadastrar-aviso").hidden = false; return; }
+    telaConvite(codigo, info);
+  });
+}
+function telaConvite(codigo, info) {
+  mostrarAcesso(`${icone()}<h1>Cadastrar este aparelho</h1>
+    <div class="cartao"><dl class="acesso-dado"><dt>Nome</dt><dd>${esc(info.nome)}</dd><dt>Pode</dt><dd>${esc(PAPEL[info.papel] || info.papel)}</dd></dl>
+      <p class="vazio">Depois de cadastrar, aparece aqui um código de 6 números. O administrador aprova este aparelho digitando esse código.</p>
+      <p class="msg erro" id="cv-cad-erro" hidden></p>
+      <button class="btn btn-pri" type="button" id="btn-cadastrar">Cadastrar este aparelho</button></div>`);
+  $("btn-cadastrar").addEventListener("click", async (ev) => {
+    const b = ev.currentTarget; b.disabled = true; b.textContent = "Cadastrando…";
+    try {
+      const ap = await E.api.cadastrar(codigo);
+      if (ap.status === "aguardando") telaAguardando(ap); else await abrirComCadastro();
+    } catch (e) {
+      $("cv-cad-erro").textContent = e.message; $("cv-cad-erro").hidden = false; b.disabled = false; b.textContent = "Cadastrar este aparelho";
+    }
+  });
+}
+/** Abre o app com o cadastro guardado: confere no servidor se o aparelho está ativo.
+    "silencioso" = conferência automática da tela de espera: não troca de tela se nada mudou
+    nem mostra erro passageiro (a próxima conferência tenta de novo). */
+let abrindo = false;
+async function abrirComCadastro(silencioso = false) {
+  if (!E.api.cadastrado()) { telaSemCadastro(); return; }
+  if (abrindo && silencioso) return; // a conferência anterior ainda não voltou
+  abrindo = true;
+  try {
+    const eu = await E.api.eu();
+    if (eu.status === "aguardando") { if (!silencioso || eu.vencido) telaAguardando(eu); return; }
+    await entrarNoApp(eu);
+    clearInterval(esperaAprovacao); esperaAprovacao = null; // só para de conferir depois de entrar de verdade
+  } catch (e) {
+    if (SEM_ACESSO.includes(e.codigo)) telaSemAcesso(e.message);
+    else if (!silencioso) telaErro(e.message);
+  } finally { abrindo = false; }
+}
+// voltou para a aba (ou desbloqueou o celular) na tela de espera: confere na hora, sem esperar os 5 segundos
+document.addEventListener("visibilitychange", () => { if (!document.hidden && esperaAprovacao) abrirComCadastro(true); });
+window.addEventListener("apont-sem-acesso", (ev) => telaSemAcesso(ev.detail.message));
+function conviteDaUrl() {
+  const m = location.hash.match(/(?:^#|&)convite=([A-Za-z0-9_-]{22})(?:&|$)/);
+  if (location.hash) history.replaceState(null, "", location.pathname + location.search); // o código não fica no histórico
+  return m ? m[1] : null;
+}
+// Convite aberto na MESMA aba em que o app já está carregado: só o "#" do endereço muda e a página
+// não recarrega, então o convite é tratado aqui.
+window.addEventListener("hashchange", () => { const c = conviteDaUrl(); if (c && E.api && !E.api.demo) fluxoConvite(c); });
+
+/* ============================================================ início */
+async function entrarNoApp(eu) {
+  $("nome-operador").textContent = eu.nome;
+  const j = await E.api.carregar();
+  E.variedades = j.itens.map((v) => ({ ...v, id: Number(v.id) }));
+  E.situacao = Number(j.situacao) === 20 ? 20 : 10;
+  E.admin = !!j.admin;
+  if (j.ensaio) { // função de ensaio: o acesso é de verdade, o lançamento fica desligado no servidor
+    $("faixa-demo").textContent = "ENSAIO do acesso por aparelho: aqui o lançamento fica desligado. O app de verdade continua no endereço normal.";
+    $("faixa-demo").hidden = false;
+  }
+  $("btn-cad").hidden = !E.admin;
+  $("btn-aparelhos").hidden = !E.admin;
+  $("quem").classList.toggle("com-admin", E.admin);
+  $("quem").hidden = false;
+  recuperar();
+  desenharPdv();
+  ir("pdv");
+}
+
+$("voltar-pdv").addEventListener("click", () => { desenharPdv(); ir("pdv"); });
+$("btn-cad").addEventListener("click", abrirCadastro);
+$("btn-aparelhos").addEventListener("click", abrirAparelhos);
+$("voltar-ap").addEventListener("click", () => { desenharPdv(); ir("pdv"); });
+$("form-convite").addEventListener("submit", gerarConvite);
+$("voltar-cad").addEventListener("click", () => { desenharPdv(); ir("pdv"); });
+$("btn-baixar").addEventListener("click", baixarProdutos);
+$("cad-codigo").addEventListener("input", conferirCodigo);
+$("cad-rotulo").addEventListener("input", () => { const p = E.produtos && E.produtos.find((x) => x.c === $("cad-codigo").value.trim()); if (p) sugerirQuantidade(p.u); });
+$("cad-qtd").addEventListener("input", () => { qtdAutomatica = !$("cad-qtd").value.trim(); });
+$("form-cad").addEventListener("submit", salvarCadastro);
+$("data").addEventListener("change", (ev) => { E.data = ev.target.value || hojeISO(); mexeu(); desenharExtrato(); });
+
+(async function iniciar() {
+  const cfg = window.APP_CONFIG;
+  try {
+    if (cfg && cfg.funcaoUrl) {
+      $("nome-empresa").textContent = cfg.empresa || "";
+      document.title = `Apontamento · ${cfg.empresa || ""}`;
+      if (window.top !== window.self) throw new Error("Por segurança, o app não abre dentro de outra página; abra o endereço direto no navegador");
+      if (!window.crypto || !crypto.subtle) throw new Error("Este navegador não tem a criptografia de que o app precisa; use o Chrome atualizado");
+      E.api = await apiReal(cfg);
+      const convite = conviteDaUrl();
+      if (convite) { await fluxoConvite(convite); return; }
+      await abrirComCadastro();
+    } else {
+      if (!window.DEMO) await carregarScript("demo.js");
+      E.api = apiDemo(window.DEMO);
+      $("nome-empresa").textContent = window.DEMO.empresa;
+      $("faixa-demo").hidden = false;
+      await entrarNoApp(await E.api.eu());
+    }
+  } catch (e) {
+    $("nome-empresa").textContent = "App indisponível";
+    $("acesso").innerHTML = `<h1>App indisponível</h1><p class="msg erro">${esc(e.message)}. Recarregue a página.</p>`;
+    ir("acesso");
+  }
+})();
+</script>
+</body>
+</html>

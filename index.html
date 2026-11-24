@@ -521,6 +521,7 @@ const ordenadas = () => E.variedades.slice().sort((a, b) =>
 const linhasDoExtrato = () => ordenadas().filter((v) => E.carrinho.get(v.id) > 0).map((v) => ({ ...v, unidades: E.carrinho.get(v.id) }));
 
 function ir(tela) {
+  if ($("qtd-caixa")?.open) fecharQuantidade(); // a caixa de quantidade não fica por cima de outra tela
   for (const t of TELAS) $(`t-${t}`).hidden = t !== tela;
   E.tela = tela;
   barra();
@@ -643,8 +644,11 @@ $("qtd-valor").addEventListener("input", () => {
 $("qtd-form").addEventListener("submit", (ev) => {
   ev.preventDefault();
   if (E.qtdId == null) { fecharQuantidade(); return; }
-  const txt = $("qtd-valor").value.trim();
-  const n = txt === "" ? 0 : Number(txt);
+  const campo = $("qtd-valor"), txt = campo.value.trim();
+  // "5." ou "5-" no teclado numérico deixam o campo vazio por dentro (badInput): não pode virar 0
+  if (campo.validity && campo.validity.badInput) { avisoQuantidade(`Digite só números inteiros, de 0 a ${MAX_UNIDADES}.`); return; }
+  if (txt === "") { avisoQuantidade("Digite a quantidade. Para tirar do extrato, digite 0."); return; }
+  const n = Number(txt);
   if (!Number.isInteger(n) || n < 0) { avisoQuantidade(`Digite um número inteiro, de 0 a ${MAX_UNIDADES}.`); return; }
   const id = E.qtdId;
   fecharQuantidade();

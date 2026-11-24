@@ -140,8 +140,8 @@ input:focus { border-color: var(--laranja); outline: none; }
 .resumo small { font-size: 13px; font-weight: 800; color: #E7C9A3; }
 
 /* filtros do PDV */
-.filtros { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
-.filtros::-webkit-scrollbar { display: none; }
+/* todas as categorias à vista: quebram linha em vez de correr escondidas para o lado (24/11/2026) */
+.filtros { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 2px; }
 .chip {
   flex: 0 0 auto; min-height: 44px; border-radius: 999px; border: 2px solid var(--areia-clara);
   background: var(--papel); font-weight: 900; padding: 0 16px; font-size: 15px;

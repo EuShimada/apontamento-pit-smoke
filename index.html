@@ -754,6 +754,13 @@ function conferirCodigo() {
       ultimaConferencia = f;
       if (!f.existe) { alvo.textContent = `✗ ${cod} não existe no Cloudfy.`; alvo.className = "cad-produto ruim"; return; }
       if (!f.rendimento) { alvo.textContent = `✗ ${f.codigo} ${f.nome} (${f.unidade}) não tem ficha técnica: o lançamento não teria o que baixar.`; alvo.className = "cad-produto ruim"; return; }
+      // Ficha provisória do Cloudfy (1 un de 999999 "SEM FICHA"): permitida (Shimada, 24/11/2026); só informa.
+      const provisoria = f.insumos.some((i) => i.codigo === "999999" || String(i.nome).toUpperCase() === "SEM FICHA");
+      if (provisoria) {
+        alvo.textContent = `✓ ${f.codigo} ${f.nome} (${f.unidade}) · ficha provisória "SEM FICHA": lança normalmente; ` +
+          "os insumos de verdade entram quando a ficha real for feita no Cloudfy.";
+        alvo.className = "cad-produto ok"; return;
+      }
       const porKg = ["UND", "UN"].includes(String(f.unidade).toUpperCase()) && f.kg_por_unidade >= 0.6;
       alvo.textContent = `✓ ${f.codigo} ${f.nome} (${f.unidade}) · ficha técnica com ${f.insumos.length} insumo${f.insumos.length === 1 ? "" : "s"}` +
         (porKg ? ` · atenção: 1 un baixaria ${fmtNum(f.kg_por_unidade)} kg (ficha parece ser por kg)` : "");

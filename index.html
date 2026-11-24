@@ -174,6 +174,21 @@ input:focus { border-color: var(--laranja); outline: none; }
   box-shadow: 0 2px 6px rgba(0,0,0,.25);
 }
 .tecla.tem .tecla-nome { padding-left: 26px; padding-right: 20px; }
+/* segurar o quadrado: caixa para digitar a quantidade, no máximo 100 (Shimada, 24/11/2026) */
+.tecla { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+.qtd-caixa {
+  border: 0; border-radius: var(--raio); padding: 20px; width: min(340px, calc(100vw - 32px));
+  background: var(--papel); color: var(--tinta); box-shadow: var(--sombra);
+}
+.qtd-caixa::backdrop { background: rgba(43, 30, 22, .55); }
+.qtd-caixa form { display: grid; gap: 14px; margin: 0; }
+.qtd-caixa h2 { margin: 0; font-size: 20px; font-weight: 900; text-transform: none; letter-spacing: 0; color: var(--tinta); }
+.qtd-caixa input {
+  width: 100%; min-height: 68px; border-radius: 12px; border: 2px solid var(--areia-clara);
+  background: var(--creme); color: var(--tinta); padding: 0 14px; font: 600 34px var(--mono); text-align: center;
+}
+.qtd-caixa input:focus { border-color: var(--laranja); outline: none; }
+.qtd-botoes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 @media (max-width: 430px) {
   .marca small { font-size: 10px; letter-spacing: .08em; }
   .quem { gap: 6px; }
@@ -331,6 +346,19 @@ input:focus { border-color: var(--laranja); outline: none; }
     <div class="secao"><h2>Produções no app</h2><div class="tela" id="cad-lista"></div></div>
     <datalist id="dl-grupos"></datalist><datalist id="dl-itens"></datalist>
   </section>
+  <!-- segurar um quadrado abre esta caixa (máximo 100) -->
+  <dialog class="qtd-caixa" id="qtd-caixa" aria-labelledby="qtd-titulo">
+    <form id="qtd-form" novalidate>
+      <h2 id="qtd-titulo">Quantidade</h2>
+      <label for="qtd-valor">Quantas unidades? (de 0 a 100)</label>
+      <input id="qtd-valor" type="number" inputmode="numeric" pattern="[0-9]*" min="0" max="100" step="1" autocomplete="off">
+      <p class="msg alerta" id="qtd-aviso" hidden></p>
+      <div class="qtd-botoes">
+        <button class="btn btn-sec" type="button" id="qtd-cancelar">Cancelar</button>
+        <button class="btn btn-pri" type="submit">OK</button>
+      </div>
+    </form>
+  </dialog>
 </main>
 
 <div class="barra" id="barra" hidden><div class="barra-dentro" id="barra-dentro"></div></div>
@@ -541,18 +569,35 @@ function desenharPdv() {
 
 function tecla(v) {
   const n = E.carrinho.get(v.id) || 0;
-  return `<button class="tecla${n ? " tem" : ""}" type="button" data-mais="${v.id}" aria-label="${esc(nomeDaLinha(v))}: ${n} no extrato. Toque para somar 1.">
+  return `<button class="tecla${n ? " tem" : ""}" type="button" data-mais="${v.id}" aria-label="${esc(nomeDaLinha(v))}: ${n} no extrato. Toque para somar 1; segure para digitar a quantidade.">
       <span class="tecla-nome">${esc(v.item)}</span><span class="tecla-var">${esc(v.rotulo || "un")}</span></button>
     ${n ? `<span class="tecla-qtd">${n}</span><button class="tecla-menos" type="button" data-menos="${v.id}" aria-label="Tirar 1 de ${esc(nomeDaLinha(v))}">−</button>` : ""}`;
 }
 
+// Toque = soma 1. Segurar (meio segundo) = abre a caixa para digitar a quantidade (Shimada, 24/11/2026).
+const SEGURAR_MS = 500;
 function ligarTecla(caixa) {
-  caixa.querySelector("[data-mais]").addEventListener("click", (ev) => somar(Number(ev.currentTarget.dataset.mais), 1));
+  const b = caixa.querySelector("[data-mais]");
+  const id = Number(b.dataset.mais);
+  let timer = null, segurou = false, x0 = 0, y0 = 0;
+  const parar = () => { clearTimeout(timer); timer = null; };
+  b.addEventListener("pointerdown", (ev) => {
+    if (ev.pointerType === "mouse" && ev.button !== 0) return;
+    segurou = false; x0 = ev.clientX; y0 = ev.clientY; parar();
+    timer = setTimeout(() => { timer = null; segurou = true; abrirQuantidade(id); }, SEGURAR_MS);
+  });
+  b.addEventListener("pointermove", (ev) => { if (timer && Math.hypot(ev.clientX - x0, ev.clientY - y0) > 12) parar(); });
+  ["pointerup", "pointercancel", "pointerleave"].forEach((t) => b.addEventListener(t, parar));
+  b.addEventListener("contextmenu", (ev) => ev.preventDefault()); // sem o menu do navegador ao segurar
+  b.addEventListener("click", (ev) => {
+    if (segurou) { segurou = false; ev.preventDefault(); return; } // o toque longo não soma 1
+    somar(id, 1);
+  });
   caixa.querySelector("[data-menos]")?.addEventListener("click", (ev) => somar(Number(ev.currentTarget.dataset.menos), -1));
 }
 
 function somar(id, d) {
-  const n = Math.max(0, Math.min(999, (E.carrinho.get(id) || 0) + d));
+  const n = Math.max(0, Math.min(MAX_UNIDADES, (E.carrinho.get(id) || 0) + d));
   if (n) E.carrinho.set(id, n); else E.carrinho.delete(id);
   mexeu();
   const caixa = $(`caixa-${id}`);
@@ -565,6 +610,48 @@ function somar(id, d) {
   if (E.tela === "extrato") desenharExtrato();
   barra();
 }
+
+/* ============================================================ caixa de quantidade (segurar) */
+const MAX_UNIDADES = 100; // trava pedida pelo Shimada (24/11/2026): no máximo 100 por quadrado
+function definir(id, n) { somar(id, n - (E.carrinho.get(id) || 0)); }
+
+function abrirQuantidade(id) {
+  const v = E.variedades.find((x) => x.id === id);
+  if (!v) return;
+  E.qtdId = id;
+  $("qtd-titulo").textContent = nomeDaLinha(v);
+  $("qtd-valor").value = E.carrinho.get(id) || "";
+  $("qtd-aviso").hidden = true;
+  if (navigator.vibrate) { try { navigator.vibrate(30); } catch (_) { /* sem vibração */ } }
+  const d = $("qtd-caixa");
+  if (typeof d.showModal === "function") { if (!d.open) d.showModal(); } else d.setAttribute("open", "");
+  setTimeout(() => { $("qtd-valor").focus(); $("qtd-valor").select(); }, 60);
+}
+
+function fecharQuantidade() {
+  const d = $("qtd-caixa");
+  if (typeof d.close === "function") { if (d.open) d.close(); } else d.removeAttribute("open");
+  E.qtdId = null;
+}
+
+function avisoQuantidade(t) { $("qtd-aviso").textContent = t; $("qtd-aviso").hidden = false; }
+
+$("qtd-valor").addEventListener("input", () => {
+  const n = Number($("qtd-valor").value);
+  if (n > MAX_UNIDADES) { $("qtd-valor").value = MAX_UNIDADES; avisoQuantidade(`O máximo é ${MAX_UNIDADES}.`); }
+});
+$("qtd-form").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  if (E.qtdId == null) { fecharQuantidade(); return; }
+  const txt = $("qtd-valor").value.trim();
+  const n = txt === "" ? 0 : Number(txt);
+  if (!Number.isInteger(n) || n < 0) { avisoQuantidade(`Digite um número inteiro, de 0 a ${MAX_UNIDADES}.`); return; }
+  const id = E.qtdId;
+  fecharQuantidade();
+  definir(id, Math.min(n, MAX_UNIDADES));
+});
+$("qtd-cancelar").addEventListener("click", fecharQuantidade);
+$("qtd-caixa").addEventListener("cancel", () => { E.qtdId = null; }); // tecla Esc / voltar
 
 /* ============================================================ extrato */
 function abrirExtrato() {
